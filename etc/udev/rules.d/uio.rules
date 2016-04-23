@@ -1,0 +1,6 @@
+# create named symlink to locate the device easily
+# (assumes your kernel is new enough to have of_node symlinks in sysfs)
+SUBSYSTEM=="uio", SYMLINK+="uio/%s{device/of_node/uio-alias}"
+
+# give some group access rights (adjust as needed)
+SUBSYSTEM=="uio", GROUP="users", MODE="0660"

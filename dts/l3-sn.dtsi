@@ -1,0 +1,14 @@
+// L3 interconnect service network
+
+&ocp {
+	l3_sn: sn@44000000 {
+		reg = <0x44000000 0x6000>,
+	      	      <0x44800000 0x5000>;
+		reg-names = "l3f", "l3s";
+		interrupt-parent = <&intc>;
+		interrupts = <10>;
+
+		compatible = "uio";
+		uio-alias = "l3-sn";
+	};
+};
