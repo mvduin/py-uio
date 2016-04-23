@@ -32,7 +32,11 @@ class Uio:
             self._mappings[ m.index ] = m
             self._mappings[ m.name ] = m
 
-
+    # I return a memoryview since mmap doesn't allow creating writeable slices,
+    # but note that slicing the mmap object itself does do the Right Thing with 
+    # regard to access size, e.g. m[0:4] will perform a 32-bit access instead of
+    # four byte-accesses.  With memoryview objects you have to use .cast to the
+    # right type, so I'm not really happy with either solution yet.
     def map( self, m, offset=0, size=None ):
         m = self._mappings[ m ]
 
