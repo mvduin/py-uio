@@ -14,7 +14,7 @@ class UioMap:
         self._mem = None
 
 class Uio:
-    def fileno( self):
+    def fileno( self ):
         return self._fd
     __index__ = fileno  # allows object to be passed to os.* calls
 
@@ -60,4 +60,4 @@ class Uio:
     #   - before handling it, if edge-triggered
     #   - after handling it, if level-triggered
     def irq_recv( self ):
-        os.recv( self, 4 )
+        os.read( self, 4 )
