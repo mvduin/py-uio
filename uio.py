@@ -22,7 +22,7 @@ class Uio:
         flags = O_RDWR | O_CLOEXEC
         if not blocking:
             flags |= O_NONBLOCK # for irq_recv
-        self._fd = os.open( path, flags )
+        self._fd = os.open( getattr( path, 'path', path ), flags )
 
         # check sysfs for available memory mappings
         dev = os.stat( self ).st_rdev
