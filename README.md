@@ -3,13 +3,13 @@ Userspace I/O in Python
 
 All examples current target the BeagleBone Black.
 
-Copy the stuff in the etc/ dir to the corresponding places in /etc and tweak
+Copy the stuff in the [etc/](etc/) dir to the corresponding places in `/etc` and tweak
 the udev rule to taste (user/group/permissions).
 
-The dts/ dir contains example device tree fragments.  If you use a custom dts
+The [dts/](dts/) dir contains example device tree fragments.  If you use a custom dts
 then you can simply include such dtsi files, but since most people don't you
 can also type `make` to build device tree overlays from them and use the utils
-in dts/bin/ to add/remove them.
+in [dts/bin/](dts/bin/) to add/remove them.
 
 Example:
 ```bash
