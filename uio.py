@@ -11,6 +11,7 @@ class UioMap:
         self.name = (info/'name').read_text().rstrip()
         self.address = int( (info/'addr').read_text(), 0 )
         self.size = int( (info/'size').read_text(), 0 )
+        self._mmap = None
         self._mem = None
 
 class Uio:
@@ -24,31 +25,38 @@ class Uio:
             flags |= O_NONBLOCK # for irq_recv
         self._fd = os.open( getattr( path, 'path', path ), flags )
 
-        # check sysfs for available memory mappings
+        # build path to sysfs dir for obtaining metadata
         dev = os.stat( self ).st_rdev
         dev = '{0}:{1}'.format( os.major(dev), os.minor(dev) )
+        self.syspath = Path('/sys/dev/char')/dev;
+
+        # enumerate memory mappings
         self._mappings = {}
-        for m in map( UioMap, (Path('/sys/dev/char')/dev/'maps').iterdir() ):
-            self._mappings[ m.index ] = m
-            self._mappings[ m.name ] = m
+        mapinfo = self.syspath/'maps';
+        if mapinfo.is_dir():
+            for m in map( UioMap, mapinfo.iterdir() ):
+                self._mappings[ m.index ] = m
+                self._mappings[ m.name ] = m
 
     # I return a memoryview since mmap doesn't allow creating writeable slices,
     # but note that slicing the mmap object itself does do the Right Thing with 
     # regard to access size, e.g. m[0:4] will perform a 32-bit access instead of
     # four byte-accesses.  With memoryview objects you have to use .cast to the
     # right type, so I'm not really happy with either solution yet.
-    def map( self, m, offset=0, size=None ):
+    def map( self, m=0, offset=None, size=None ):
         m = self._mappings[ m ]
 
         if m._mem is None:
-            m._mem = memoryview( mmap( self._fd, m.size, offset=m.index<<12 ) )
-        m = m._mem
+            m._mmap = mmap( self._fd, m.size, offset = m.index << 12 )
+            m._mem = memoryview( m._mmap )
 
         if size is None:
-            if offset is 0:
-                return m
-            return m[offset:]
-        return m[offset:offset+size]
+            if offset is None:
+                return m._mmap
+            if offset == 0:
+                return m._mem
+            return m._mem[offset:]
+        return m._mem[offset:offset+size]
 
     def irq_enable( self ):
         os.write( self, b'\x01\x00\x00\x00' )
