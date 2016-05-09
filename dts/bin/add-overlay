@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+path="$1"
+
+if [[ $# -ne 1 || "$path" != *.dtbo || ! -f "$path" ]]; then
+	echo "Usage: add-overlay FILE" >&2
+	exit 1
+fi
+
+name="${path##*/}"
+name="${name%.dtbo}"
+
+dir="/sys/kernel/config/device-tree/overlays/$name"
+mkdir "$dir"
+
+cleanup() {
+	rmdir -v "$dir";
+}
+trap cleanup EXIT
+
+cat "$path" >"$dir/dtbo"
+stat=`cat "$dir/status"`
+if [[ "$stat" == applied ]]; then
+	trap - EXIT
+	exit 0
+else
+	echo "$dir/status: $stat" >&2
+	exit 1
+fi

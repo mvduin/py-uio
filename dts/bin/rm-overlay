@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+use v5.16;
+use strict;
+use warnings qw( FATAL all );
+use autodie;
+use Fcntl qw( LOCK_EX );
+
+die "Usage: rm-overlay NAME...\n"  unless @ARGV;
+my %rm; @rm{ @ARGV } = ( 1 ) x @ARGV;
+
+chdir '/sys/kernel/config/device-tree/overlays';
+-w '.'  or die "Permission denied\n";
+
+my @applied;
+my @removed;
+
+opendir my $dh, '.';
+open my $dh_fh, '+<&', fileno( $dh );
+flock $dh_fh, LOCK_EX;
+
+for( readdir $dh ) {
+	next if /^\.\.?\z/;
+	open my $fh, '<', "$_/status";
+	chomp( my $status = <$fh> );
+	if( $status ne 'applied' ) {
+		delete $rm{$_};
+		if( eval { rmdir $_ } ) {
+			say "Removed stale overlay $_\n";
+		} else {
+			warn "Unable to remove stale overlay $_\n";
+		}
+	} elsif( ! delete $rm{$_} ) {
+		push @applied, $_;
+	} elsif( eval { rmdir $_ } ) {
+		push @removed, $_;
+	} else {
+		if( @applied ) {
+			warn "Unable to unapply $_ due to stacked overlays\n";
+		} else {
+			warn "Unable to unapply $_: $!";
+		}
+		push @applied, $_;
+	}
+}
+closedir $dh;
+close $dh_fh;
+
+my @notfound = grep $rm{$_}, @ARGV;
+say "Overlays not found: @notfound"  if @notfound;
+say "Overlays removed: @removed"  if @removed;
+say "Overlays still applied: @applied"  if @applied;
+say "No overlays applied"  unless @applied;

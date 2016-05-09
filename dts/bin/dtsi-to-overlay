@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+use v5.16;
+use strict;
+use warnings qw( FATAL all );
+use autodie;
+
+print <<'END';
+# 1 "<dtsi-to-overlay>"
+/dts-v1/;
+/plugin/;
+END
+
+my $n = 0;
+my $inside = 0;
+my( $line, $file ) = ( 0, '-' );
+
+sub fail {  die $_, "$file:$line: @_\n"  }
+
+my $nameRE = qr/\w[\w,.@-]*/;
+my $pathRE = qr!/|(?:/$nameRE)+!;
+
+# this assumes input is CPP processed and properly indented
+while( <> ) {
+	++$line;
+	next if /^\s*\z/;
+	if( /^# (\d+) "([^"]+)"(?: \d+)?\s*\z/ ) {
+		( $line, $file ) = ( $1-1, $2 );
+		next;
+	}
+
+	if( $inside ) {
+		unless( /^\s/ ) {
+			/^\};\s*\z/ or fail "Expecting };";
+			$_ = "}; }; };\n";
+			$inside = 0;
+		}
+		next;
+
+	} elsif( /^(&\w+)\s*\{\s*\z/ ) {
+		$_ = "target = <$1>";
+
+	} elsif( m!^(?|&\{($pathRE)\}|($pathRE))\s*\{\s*\z! ) {
+		$_ = "target-path = \"$1\"";
+
+	} else {
+		fail "Parse error";
+	}
+
+	$_ = "/ { fragment\@$n { $_; __overlay__ {\n";
+	++$n;
+	$inside = 1;
+} continue {
+	print;
+}
+
+fail "Unexpected EOF inside fragment" if $inside;
+die "Empty overlay\n" unless $n;
