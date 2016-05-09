@@ -17,7 +17,6 @@ class UioMap:
 class Uio:
     def fileno( self ):
         return self._fd
-    __index__ = fileno  # allows object to be passed to os.* calls
 
     def __init__( self, path, blocking = True ):
         flags = O_RDWR | O_CLOEXEC
@@ -26,7 +25,7 @@ class Uio:
         self._fd = os.open( getattr( path, 'path', path ), flags )
 
         # build path to sysfs dir for obtaining metadata
-        dev = os.stat( self ).st_rdev
+        dev = os.stat( self._fd ).st_rdev
         dev = '{0}:{1}'.format( os.major(dev), os.minor(dev) )
         self.syspath = Path('/sys/dev/char')/dev;
 
@@ -59,13 +58,13 @@ class Uio:
         return m._mem[offset:offset+size]
 
     def irq_enable( self ):
-        os.write( self, b'\x01\x00\x00\x00' )
+        os.write( self._fd, b'\x01\x00\x00\x00' )
 
     def irq_disable( self ):
-        os.write( self, b'\x00\x00\x00\x00' )
+        os.write( self._fd, b'\x00\x00\x00\x00' )
 
     # note: irq is disabled once received.  you need to reenable it
     #   - before handling it, if edge-triggered
     #   - after handling it, if level-triggered
     def irq_recv( self ):
-        os.read( self, 4 )
+        os.read( self._fd, 4 )
