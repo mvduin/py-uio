@@ -5,15 +5,52 @@ from stat import S_ISCHR
 from mmap import mmap
 from pathlib import Path
 
-class UioMap:
-    def __init__( self, info ):
-        self.index = int( re.fullmatch( r'map([0-9])', info.name ).group(1) )
-        self.name = (info/'name').read_text().rstrip()
-        self.address = int( (info/'addr').read_text(), 0 )
-        self.size = int( (info/'size').read_text(), 0 )
-        self._mmap = None
-        self._mem = None
+PAGE_SHIFT = 12
+PAGE_SIZE = 1 << PAGE_SHIFT
+PAGE_MASK = -PAGE_SIZE
 
+class MemRegion:
+    def __init__( rgn, uio, info ):
+        rgn.index = int( re.fullmatch( r'map([0-9])', info.name ).group(1) )
+        rgn.name = (info/'name').read_text().rstrip()
+        rgn.address = int( (info/'addr').read_text(), 0 )
+        rgn.size = int( (info/'size').read_text(), 0 )
+        rgn.end = rgn.address + rgn.size
+        if rgn.address & ~PAGE_MASK:
+            rgn.mappable = 0   # not page-aligned, can't be mapped
+        else:
+            rgn.mappable = rgn.size & PAGE_MASK
+        rgn._mmap = None
+        rgn.uio = uio
+
+    def __contains__( rgn, child ):
+        return child.address >= rgn.address and child.end <= rgn.end
+
+    def offset( rgn, child ):
+        if child not in rgn:
+            raise RuntimeError( "not a child region" )
+        return child.address - rgn.address
+
+    def map( rgn, struct, offset=0 ):
+        if not rgn._mmap:
+            if not rgn.mappable:
+                raise RuntimeError( "region is not mappable" )
+
+            # UIO uses a disgusting hack where the memory map index is
+            # passed via the offset argument.  In the actual kernel call
+            # the offset (and length) are in pages rather than bytes, hence
+            # we actually need to pass index * PAGE_SIZE as offset.
+            rgn._mmap = mmap( rgn.uio._fd, rgn.mappable,
+                            offset = rgn.index * PAGE_SIZE )
+
+        if isinstance( offset, Uio ):
+            offset = offset.region()
+        if isinstance( offset, MemRegion ):
+            offset = rgn.offset( offset )
+        return struct.from_buffer( rgn._mmap, offset )
+
+
+# uio device object
 class Uio:
     def fileno( self ):
         return self._fd
@@ -28,35 +65,26 @@ class Uio:
         # build path to sysfs dir for obtaining metadata
         dev = os.stat( self._fd ).st_rdev
         dev = '{0}:{1}'.format( os.major(dev), os.minor(dev) )
-        self.syspath = Path('/sys/dev/char')/dev;
+        self.syspath = Path('/sys/dev/char', dev).resolve()
 
-        # enumerate memory mappings
-        self._mappings = {}
-        mapinfo = self.syspath/'maps';
-        if mapinfo.is_dir():
-            for m in map( UioMap, mapinfo.iterdir() ):
-                self._mappings[ m.index ] = m
-                self._mappings[ m.name ] = m
+        # enumerate memory regions
+        self._regions = {}
+        rgninfo = self.syspath/'maps';
+        if rgninfo.is_dir():
+            for info in rgninfo.iterdir():
+                rgn = MemRegion( self, info )
+                self._regions[ rgn.index ] = rgn
+                self._regions[ rgn.name ] = rgn
 
-    # I return a memoryview since mmap doesn't allow creating writeable slices,
-    # but note that slicing the mmap object itself does do the Right Thing with 
-    # regard to access size, e.g. m[0:4] will perform a 32-bit access instead of
-    # four byte-accesses.  With memoryview objects you have to use .cast to the
-    # right type, so I'm not really happy with either solution yet.
-    def map( self, m=0, offset=None, size=None ):
-        m = self._mappings[ m ]
+    def region( self, rgn=0 ):
+        return self._regions[ rgn ]
 
-        if m._mem is None:
-            m._mmap = mmap( self._fd, m.size, offset = m.index << 12 )
-            m._mem = memoryview( m._mmap )
+    def map( self, *args ):
+        rgn = 0
+        if type(args[0]) in (int,str):
+            (rgn,*args) = args
+        return self.region( rgn ).map( *args )
 
-        if size is None:
-            if offset is None:
-                return m._mmap
-            if offset == 0:
-                return m._mem
-            return m._mem[offset:]
-        return m._mem[offset:offset+size]
 
     def irq_enable( self ):
         os.write( self._fd, b'\x01\x00\x00\x00' )
