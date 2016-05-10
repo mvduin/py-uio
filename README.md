@@ -34,8 +34,5 @@ The l3-sn is useful testing ground since it is very fussy about access size.
 
 ## Known issues
 
-The code may require Python 3.5 currently, I'll work on at least reducing that
-to Python 3.4.
-
 I'm still having weird problems with overlays, see e.g. comments in
 [dts/p9.12-irq.dtsi](dts/p9.12-irq.dtsi)

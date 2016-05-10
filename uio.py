@@ -12,9 +12,12 @@ PAGE_MASK = -PAGE_SIZE
 class MemRegion:
     def __init__( rgn, uio, info ):
         rgn.index = int( re.fullmatch( r'map([0-9])', info.name ).group(1) )
-        rgn.name = (info/'name').read_text().rstrip()
-        rgn.address = int( (info/'addr').read_text(), 0 )
-        rgn.size = int( (info/'size').read_text(), 0 )
+        def getinfo( attr ):
+            with (info/attr).open() as f:
+                return f.readline().rstrip()
+        rgn.name = getinfo( 'name' )
+        rgn.address = int( getinfo('addr'), 0 )
+        rgn.size = int( getinfo('size'), 0 )
         rgn.end = rgn.address + rgn.size
         if rgn.address & ~PAGE_MASK:
             rgn.mappable = 0   # not page-aligned, can't be mapped
@@ -60,7 +63,7 @@ class Uio:
         if not blocking:
             flags |= O_NONBLOCK # for irq_recv
         path = Path( '/dev/uio', path )
-        self._fd = os.open( path.path, flags )
+        self._fd = os.open( str(path), flags )
 
         # build path to sysfs dir for obtaining metadata
         dev = os.stat( self._fd ).st_rdev
