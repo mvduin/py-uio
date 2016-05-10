@@ -27,6 +27,6 @@
 //		pinctrl-0 = <&p9_12_irq_pin>;
 
 		interrupt-parent = <&gpio1>;
-		interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
+		interrupts = <28 IRQ_TYPE_LEVEL_LOW>;
 	};
 };
