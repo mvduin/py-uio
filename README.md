@@ -1,17 +1,17 @@
 # py-uio
 Userspace I/O in Python
 
-All examples current target the BeagleBone Black.
+All examples currently target the BeagleBone Black.
 
-Copy the stuff in the [etc/](etc/) dir to the corresponding places in `/etc` and tweak
-the udev rule to taste (user/group/permissions).
+Copy the stuff in the [etc/](etc/) dir to the corresponding places in `/etc`
+and tweak the udev rule to taste (user/group/permissions).
 
-The [dts/](dts/) dir contains example device tree fragments.  If you use a custom dts
-then you can simply include such dtsi files, but since most people don't you
-can also type `make` to build device tree overlays from them and use the utils
-in [dts/bin/](dts/bin/) to add/remove them.
+The [dts/](dts/) dir contains example device tree fragments.  If you use a
+custom dts then you can simply include such dtsi files, but since most people
+don't you can also type `make` to build device tree overlays from them and use
+the utils in [dts/bin/](dts/bin/) to add/remove them.
 
-Example:
+Example 1 (gpio-triggered IRQ):
 ```bash
 cd dts
 make p9.12-irq.dtbo
@@ -21,14 +21,21 @@ cd ..
 # now pull P9.12 to ground to trigger the irq the script is waiting for
 ```
 
-There's also a little example targeting the l3-sn since it is unusually fussy
-about access size, making it good testing ground.
+Example 2 (small experiment with L3 service network):
+```bash
+cd dts
+make l3-sn.dtbo
+sudo bin/add-overlay l3-sn.dtbo
+cd ..
+./l3-sn-test.py
+```
+
+The l3-sn is useful testing ground since it is very fussy about access size.
 
 ## Known issues
 
 The code may require Python 3.5 currently, I'll work on at least reducing that
 to Python 3.4.
 
-Overlays aren't working yet for me currently, they seem to install fine but an
-error appears in the kernel log and the uio device never appears.  This may be
-kernel version dependent, haven't explored yet.
+I'm still having weird problems with overlays, see e.g. comments in
+[dts/p9.12-irq.dtsi](dts/p9.12-irq.dtsi)
