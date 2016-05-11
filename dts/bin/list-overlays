@@ -11,9 +11,6 @@ chdir '/sys/kernel/config/device-tree/overlays';
 my @applied;
 
 opendir my $dh, '.';
-open my $dh_fh, '+<&', fileno( $dh );
-flock $dh_fh, LOCK_EX;
-
 for( readdir $dh ) {
 	next if /^\.\.?\z/;
 	open my $fh, '<', "$_/status";
@@ -27,7 +24,6 @@ for( readdir $dh ) {
 	}
 }
 closedir $dh;
-close $dh_fh;
 
 say "Overlays applied: @applied"  if @applied;
 say "No overlays applied"  unless @applied;

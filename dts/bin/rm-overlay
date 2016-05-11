@@ -16,9 +16,6 @@ my @applied;
 my @removed;
 
 opendir my $dh, '.';
-open my $dh_fh, '+<&', fileno( $dh );
-flock $dh_fh, LOCK_EX;
-
 for( readdir $dh ) {
 	next if /^\.\.?\z/;
 	open my $fh, '<', "$_/status";
@@ -44,7 +41,6 @@ for( readdir $dh ) {
 	}
 }
 closedir $dh;
-close $dh_fh;
 
 my @notfound = grep $rm{$_}, @ARGV;
 say "Overlays not found: @notfound"  if @notfound;
