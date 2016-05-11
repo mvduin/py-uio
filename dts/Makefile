@@ -13,6 +13,6 @@ clean ::
 
 %.dtbo: %.dtsi
 	${CPP} ${CPPFLAGS} $< -pipe | bin/dtsi-to-overlay \
-		| ${DTC} -I dts -O dtb ${OUTPUT_OPTION}
+		| ${DTC} -@ -I dts -O dtb ${OUTPUT_OPTION}
 
 .DELETE_ON_ERROR:

@@ -31,8 +31,3 @@ cd ..
 ```
 
 The l3-sn is useful testing ground since it is very fussy about access size.
-
-## Known issues
-
-I'm still having weird problems with overlays, see e.g. comments in
-[dts/p9.12-irq.dtsi](dts/p9.12-irq.dtsi)

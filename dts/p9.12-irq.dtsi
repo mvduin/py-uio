@@ -2,20 +2,13 @@
 #include "bone/pins.h"
 #include "irq.h"
 
-// XXX somehow the pinmux setup causes the overlay to fail with a bizarre
-// error, even though the same fragment works fine if included in the main dts.
-//
-// Since GPIO is the default anyway I just omit the pinmux setup for now until
-// the problem is found and solved.
-
-
-//&am33xx_pinmux {
-//	p9_12_irq_pin: p9.12-irq {
-//		pinctrl-single,pins = <
-//			PIN_GPIN_PULLUP( P9_12 )  // gpio 1.28
-//		>;
-//	};
-//};
+&am33xx_pinmux {
+	p9_12_irq_pin: p9.12-irq {
+		pinctrl-single,pins = <
+			PIN_GPIN_PULLUP( P9_12 )  // gpio 1.28
+		>;
+	};
+};
 
 / {
 	// no idea what a proper place would be to put it
@@ -23,8 +16,8 @@
 		compatible = "uio";
 		uio-alias = "p9.12-irq";
 
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&p9_12_irq_pin>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&p9_12_irq_pin>;
 
 		interrupt-parent = <&gpio1>;
 		interrupts = <28 IRQ_TYPE_LEVEL_LOW>;
