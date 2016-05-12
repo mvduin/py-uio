@@ -4,4 +4,5 @@
         status = "okay";
         compatible = "uio";
         uio-alias = "adc";
+
 };
