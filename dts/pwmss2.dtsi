@@ -1,0 +1,70 @@
+#include "subarctic/pinctrl.h"
+#include "bone/pins.h"
+
+&am33xx_pinmux {
+	qep2_pins: qep2 {
+		pinctrl-single,pins = <
+			PIN_IN_PULLUP( P8_12, 4 )  // qep 2 A
+			PIN_IN_PULLUP( P8_11, 4 )  // qep 2 B
+			PIN_IO_PULLUP( P8_16, 4 )  // qep 2 index
+			PIN_IO_PULLUP( P8_15, 4 )  // qep 2 strobe
+		>;
+	};
+};
+
+// pwmss is hard to fix up properly in an overlay, but the approach below
+// seems to work.  The original definitions of the submodules (child nodes
+// of the pwmss node) are simply ignored.
+//
+// XXX removing the overlay results in a kernel oops though, so ehm, just
+// don't do that I guess.
+
+&epwmss2 {
+	status = "okay";
+	reg = <0x48304000 0x1000>;
+	compatible = "uio";
+	uio-alias = "pwmss2/module";
+};
+
+&ocp {
+	cap2: cap@48304100 {
+		reg = <0x48304100 0x80>;
+		interrupt-parent = <&intc>;
+		interrupts = <61>;
+		compatible = "uio";
+		uio-alias = "pwmss2/cap";
+	};
+
+	qep2: qep@48304180 {
+		reg = <0x48304180 0x80>;
+		interrupt-parent = <&intc>;
+		interrupts = <89>;
+		compatible = "uio";
+		uio-alias = "pwmss2/qep";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&qep2_pins>;
+	};
+
+	pwm2: pwm@48304200 {
+		reg-names = "pwm", "hr";
+		reg = <0x48304200 0x80>, <0x48304280 0x80>;
+		interrupt-parent = <&intc>;
+		interrupt-names = "pwm", "tz";
+		interrupts = <39>, <60>;
+		compatible = "uio";
+		uio-alias = "pwmss2/pwm";
+	};
+};
+
+// Create an irq-only device for the tz irq as workaround for the limitation
+// of uio_pdrv_genirq that it supports only one irq per device (the first one)
+
+/ {
+	pwm2-tz {
+		interrupt-parent = <&intc>;
+		interrupts = <60>;
+		compatible = "uio";
+		uio-alias = "pwmss2/pwm-tz";
+	};
+};
