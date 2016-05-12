@@ -37,7 +37,7 @@ class MemRegion:
             if rgn not in parent:
                 raise RuntimeError( "memory region outside parent" )
             rgn.offset = rgn.address - parent.address
-            rgn.mappable = max( parent.mappable - offset, 0 )
+            rgn.mappable = max( parent.mappable - rgn.offset, 0 )
 
         elif rgn.address & ~PAGE_MASK:
             rgn.mappable = 0    # not page-aligned, can't be mapped
@@ -57,7 +57,7 @@ class MemRegion:
             raise RuntimeError( "region is not mappable" )
 
         if rgn.parent:
-            return parent.map( struct, offset + rgn.offset )
+            return rgn.parent.map( struct, offset + rgn.offset )
 
         if not rgn._mmap:
             # UIO uses a disgusting hack where the memory map index is
