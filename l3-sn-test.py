@@ -44,9 +44,9 @@ class FaultCombiner( ctypes.Structure ):
 # separation.  The device tree snippet arranges for the "app fault" output of
 # the top-level faultcombiner to be deliverable as irq to userspace.
 #
-fc_top = l3_sn.map( "l3f", FaultCombiner, 0x1100 )
-fc_l3f = l3_sn.map( "l3f", FaultCombiner, 0x1000 )
-fc_l3s = l3_sn.map( "l3s", FaultCombiner,  0x600 )
+fc_top = l3_sn.region( "l3f" ).map( FaultCombiner, 0x1100 )
+fc_l3f = l3_sn.region( "l3f" ).map( FaultCombiner, 0x1000 )
+fc_l3s = l3_sn.region( "l3s" ).map( FaultCombiner,  0x600 )
 
 for i in fc_top, fc_l3s, fc_l3f:
     assert i.component.vendor == 1

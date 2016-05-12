@@ -4,14 +4,17 @@ from os import O_RDWR, O_CLOEXEC, O_NONBLOCK
 from stat import S_ISCHR
 from mmap import mmap
 from pathlib import Path
+from ctypes import sizeof
 
 PAGE_SHIFT = 12
 PAGE_SIZE = 1 << PAGE_SHIFT
 PAGE_MASK = -PAGE_SIZE
 
+# a physical memory region associated with an uio device
 class MemRegion:
-    def __init__( rgn, uio, info ):
+    def __init__( rgn, uio, info, parent=None ):
         rgn.uio = uio
+        rgn.parent = parent
         rgn.index = int( re.fullmatch( r'map([0-9])', info.name ).group(1) )
 
         def getinfo( attr ):
@@ -29,11 +32,18 @@ class MemRegion:
         rgn.size = int( getinfo('size'), 0 )
         rgn.end = rgn.address + rgn.size
 
-        # size that can be actually mmap()ed
-        if rgn.address & ~PAGE_MASK:
-            rgn.mappable = 0   # not page-aligned, can't be mapped
+        # determine how much of the region can actually be mapped
+        if parent:
+            if rgn not in parent:
+                raise RuntimeError( "memory region outside parent" )
+            rgn.offset = rgn.address - parent.address
+            rgn.mappable = max( parent.mappable - offset, 0 )
+
+        elif rgn.address & ~PAGE_MASK:
+            rgn.mappable = 0    # not page-aligned, can't be mapped
+
         else:
-            rgn.mappable = rgn.size & PAGE_MASK
+            rgn.mappable = rgn.size & PAGE_MASK     # actual mappable size
 
         # mmap() is done lazily when needed
         rgn._mmap = None
@@ -41,16 +51,15 @@ class MemRegion:
     def __contains__( rgn, child ):
         return child.address >= rgn.address and child.end <= rgn.end
 
-    def offset( rgn, child ):
-        if child not in rgn:
-            raise RuntimeError( "not a child region" )
-        return child.address - rgn.address
-
+    # map a struct at given offset within this memory region
     def map( rgn, struct, offset=0 ):
-        if not rgn._mmap:
-            if not rgn.mappable:
-                raise RuntimeError( "region is not mappable" )
+        if offset + sizeof(struct) > rgn.mappable:
+            raise RuntimeError( "region is not mappable" )
 
+        if rgn.parent:
+            return parent.map( struct, offset + rgn.offset )
+
+        if not rgn._mmap:
             # UIO uses a disgusting hack where the memory map index is
             # passed via the offset argument.  In the actual kernel call
             # the offset (and length) are in pages rather than bytes, hence
@@ -58,10 +67,6 @@ class MemRegion:
             rgn._mmap = mmap( rgn.uio._fd, rgn.mappable,
                             offset = rgn.index * PAGE_SIZE )
 
-        if isinstance( offset, Uio ):
-            offset = offset.region()
-        if isinstance( offset, MemRegion ):
-            offset = rgn.offset( offset )
         return struct.from_buffer( rgn._mmap, offset )
 
 
@@ -79,13 +84,12 @@ class Uio:
             flags |= O_NONBLOCK # for irq_recv
         self._fd = os.open( str(path), flags )
 
-        # parent memory region (if any)
+        # check parent memory region (if any)
         if parent is not None:
             if isinstance( parent, Uio ):
                 parent = parent.region()
             elif isinstance( parent, MemRegion ):
                 raise TypeError
-        self.parent = parent
 
         # build path to sysfs dir for obtaining metadata
         dev = os.stat( self._fd ).st_rdev
@@ -98,11 +102,7 @@ class Uio:
         rgninfo = self.syspath/'maps';
         if rgninfo.is_dir():
             for info in rgninfo.iterdir():
-                rgn = MemRegion( self, info )
-
-                # sanity check
-                if parent is not None and rgn not in parent:
-                    raise RuntimeError( "memory region outside parent" )
+                rgn = MemRegion( self, info, parent )
 
                 # allow lookup by index or (if available) by name
                 self._regions[ rgn.index ] = rgn
@@ -112,16 +112,10 @@ class Uio:
     def region( self, rgn=0 ):
         return self._regions[ rgn ]
 
-    def map( self, *args ):
-        rgn = 0
-        if type(args[0]) in (int,str):
-            (rgn,*args) = args
-        rgn = self.region( rgn )
-        if self.parent is not None:
-            (struct,) = args
-            return self.parent.map( struct, rgn )
-        else:
-            return rgn.map( *args )
+    # shortcut to map default region (index 0)
+    def map( self, struct, offset=0 ):
+        return self.region().map( struct, offset )
+
 
     # TODO determine if the device has any irq
 
