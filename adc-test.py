@@ -3,7 +3,7 @@
 from uio import Uio
 import ctypes
 from ctypes import c_uint32 as uint
-from ctypes import c_char as byte
+from ctypes import c_byte as byte
 
 ########## ADC  #####################################
 #
@@ -54,16 +54,28 @@ class ADC( IterableStructure ):
         ("dma1req", uint, 32),
         ("spacer03", byte*4),
         ("fifo0data", uint, 32),
-        ("spacer04", byte*0x1FC),
+        ("spacer04", byte*0xFC),
         ("fifo1data", uint, 32)
     ];
 testStatus  = adc.map(ADC)
+i = 0
 for x in testStatus:
+#    if ( i % 5 == 0):
+#        input("Press Enter to Continue:")
     if isinstance(x, int):
-        print(format(x, '0{0}b'.format(32)))
+        print(hex(i), ": ", format(x, '0{0}b'.format(32)), end="")
+        i = i + 4
     if hasattr(x, "__len__"):
-         for x2 in x:
-             if isinstance(x2, Step):
+        for x2 in x:
+            if isinstance(x2, Step):
                 for x3 in x2:
                     if isinstance(x3, int):
-                        print(format(x3, '0{0}b'.format(32)))
+                        print(hex(i), ": ", format(x3, '0{0}b'.format(32)))
+                        i = i + 4
+            else:
+                print(hex(i), ": " , "BUFFER: ", x2.__sizeof__())
+                i = i + 1
+#                if (i % 5 == 0):
+#                    input("Press Enter to Continue:")
+    else:
+        print("<")
