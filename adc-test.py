@@ -9,14 +9,21 @@ from ctypes import c_char as byte
 #
 # This will test the ADC Status Register
 # Adapted from zmatt's l3-sn-test.py
+from ctypes import Structure
+
+class IterableStructure(Structure):
+    def __getitem__(self, i):
+      if not isinstance(i, int):
+        raise TypeError('subindices must be integers: %r' % i)
+      return getattr(self, self._fields_[i][0])
 
 adc = Uio( "adc" )
-class Step( ctypes.Structure ):
+class Step( IterableStructure ):
     _fields_ = [
         ("stepconfig", uint, 32),
         ("stepdelay", uint, 32),
     ];
-class ADC( ctypes.Structure ):
+class ADC( IterableStructure ):
     _fields_ = [
         ("revision", uint, 32),
         ("spacer01", byte*(0x10-4)),
@@ -51,4 +58,12 @@ class ADC( ctypes.Structure ):
         ("fifo1data", uint, 32)
     ];
 testStatus  = adc.map(ADC)
-print( 'Status Register: ' + format( testStatus.dmaenable_set, '0{0}b'.format(32) ) )
+for x in testStatus:
+    if isinstance(x, int):
+        print(format(x, '0{0}b'.format(32)))
+    if hasattr(x, "__len__"):
+         for x2 in x:
+             if isinstance(x2, Step):
+                for x3 in x2:
+                    if isinstance(x3, int):
+                        print(format(x3, '0{0}b'.format(32)))
