@@ -41,7 +41,7 @@ class bitBlanket():
         #wrap this whole thing into one line
         self.memBlanket = self.myUio.map(self.memBlanket)
 
-# The following establish assignmet/indice operators for bitBlanket and
+# The following establish indice/assignment operators for bitBlanket and
 # memBlanket (respectively)
     def __getitem__(self, i):
         returnValue = 0
@@ -83,11 +83,3 @@ class bitBlanket():
             raise TypeError('subindices must be integers: %r' % i)
         setattr(self, self._fields_[i][0], value)
 
-# Here is the example. The dictionary is ugly as hell, I'm thinking CSV or XML
-adcDict = dict(REVISION=(0x0,4),SYSCONFIG=(0x10,4),IRQSTATUS_RAW=(0x24,4),IRQSTATUS=(0x28,4),IRQENABLE_SET=(0x2c,4),IRQENABLE_CLR=(0x30,4),IRQWAKEUP=(0x34,4),DMAENABLE_SET=(0x38,4),DMAENABLE_CLR=(0x3c,4),CTRL=(0x40,4),ADCSTAT=(0x44,4),ADCRANGE=(0x48,4),ADC_CLKDIV=(0x4c,4),ADC_MISC=(0x50,4),STEPENABLE=(0x54,4),IDLECONFIG=(0x58,4),TS_CHARGE_STEPCONFIG=(0x5c,4),TS_CHARGE_DELAY=(0x60,4),STEPCONFIG1=(0x64,4),STEPDELAY1=(0x68,4),STEPCONFIG2=(0x6c,4),STEPDELAY2=(0x70,4),STEPCONFIG3=(0x74,4),STEPDELAY3=(0x78,4),STEPCONFIG4=(0x7c,4),STEPDELAY4=(0x80,4),STEPCONFIG5=(0x84,4),STEPDELAY5=(0x88,4),STEPCONFIG6=(0x8c,4),STEPDELAY6=(0x90,4),STEPCONFIG7=(0x94,4),STEPDELAY7=(0x98,4),STEPCONFIG8=(0x9c,4),STEPDELAY8=(0xa0,4),STEPCONFIG9=(0xa4,4),STEPDELAY9=(0xa8,4),STEPCONFIG10=(0xac,4),STEPDELAY10=(0xb0,4),STEPCONFIG11=(0xb4,4),STEPDELAY11=(0xb8,4),STEPCONFIG12=(0xbc,4),STEPDELAY12=(0xc0,4),STEPCONFIG13=(0xc4,4),STEPDELAY13=(0xc8,4),STEPCONFIG14=(0xcc,4),STEPDELAY14=(0xd0,4),STEPCONFIG15=(0xd4,4),STEPDELAY15=(0xd8,4),STEPCONFIG16=(0xdc,4),STEPDELAY16=(0xe0,4),FIFO0COUNT=(0xe4,4),FIFO0THRESHOLD=(0xe8,4),DMA0REQ=(0xec,4),FIFO1COUNT=(0xf0,4),FIFO1THRESHOLD=(0xf4,4),DMA1REQ=(0xf8,4),FIFO0DATA=(0x100,4),FIFO1DATA=(0x200,4),)
-
-ADC = bitBlanket("adc", 0x204, adcDict)
-for x in ADC:
-    print (type(x) , " : " , format(x, '0{0}b'.format(8)))
-print(bin(ADC[0:3]))
-print(bin(ADC["REVISION"]))
