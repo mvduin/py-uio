@@ -1,0 +1,12 @@
+adc.py allows you to monitor and write to registers defined by a dictionary object
+
+use arrow keys to move around, use the enter key to 1) start making changes and 2) confirm changes.
+
+use 'c' to cancel changes.
+
+use 'q' to quit.
+
+it is rough around the edges- you SHOULD run it in a terminal large enough to support all registers mapped by the dictionary.
+if full screen isn't good enough, then you need to make your font smaller.
+
+it reorders the registers EVERY TIME YOU RUN IT.
