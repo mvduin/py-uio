@@ -70,8 +70,9 @@ class bitBlanket():
         else:
             raise TypeError('subindicies must be integers or dictionary keys(strings): %r' % i)
         for i2 in i:
-            tempValue = ctypes.c_ubyte(((ctypes.c_ulong(value)>> (8 * i2-i[0])) &
-                     ctypes.c_ubyte(255))) #if you can't tell, dynamic typing terrifies me
+            tempValue = ctypes.c_ubyte(((ctypes.c_ulong(value).value>> (8 *(
+                i2-i[0]))) &
+                     ctypes.c_ubyte(255).value)) #if you can't tell, dynamic typing terrifies me
             self.memBlanket[0][i2] = tempValue
 
     def getitem(self, i):
