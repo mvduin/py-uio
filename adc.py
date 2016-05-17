@@ -4,9 +4,16 @@
 import bitblanket as bb
 import curses
 from curses import wrapper
-from adcdictionary import adcDict
+from adcdictionary import ADCList as adcDict
 
-ADC = bb.bitBlanket("adc", 0x204, adcDict)
+
+ADC = bb.bitBlanket("adc", 0x204, 4)
+
+################# a generic register editor #################################
+#
+# Frankly it's very poorly written and needs to be, and will be, restructured
+# completely using classes, and other things.
+#
 
 def main(stdscr):
     stdscr.clear()
@@ -64,7 +71,7 @@ def main(stdscr):
                     inValue = int(inValue, 2)
                     pad.addstr(int(edit/ncols)*height+1, edit%ncols*width,
                                format(inValue, "0{0}b".format(32)))
-                    ADC[editName] = inValue 
+                    ADC[adcDict[editName]] = inValue 
                 pad.addstr(int(edit/ncols)*height+2,edit%ncols*width,
                           " "*32)
                 edit = -1
@@ -85,7 +92,7 @@ def main(stdscr):
                 attr = curses.color_pair(1)
                 editName = name
             pad.addstr(y, x, name+":{0}".format(i), attr)
-            pad.addstr(y+1, x, format(ADC[name], "0{0}b".format(32)))
+            pad.addstr(y+1, x, format(ADC[adcDict[name]], "0{0}b".format(32)))
             i = i + 1
             x = x + width
             if (x/width >= ncols):

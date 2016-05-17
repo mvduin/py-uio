@@ -3,31 +3,33 @@
 from uio import Uio
 import ctypes
 
-########## ADC with a bitblank implementation #####################################
+########## bitBlanket #####################################
 #
 # 
 # Adapted from zmatt's l3-sn-test.py
-#     The point of this class was to avoid "driver developers" from having to pass
+#
+#   The point of this class was to avoid "driver developers" from having to pass
 # a c structure to the uio class. In case a different solution is found, as
 # long as uio passes back a bitBlanket, which contains general functions for
-# accessing registers in python, the underlying mechanics can continue to
-# evolve.
-#     Bit blanket works so that you can create a bitBlanket object, say ADC,
+# accessing registers in python, the mechanics interacting with lib uio can continue to
+# evolve without affecting libraries built on top of it.
+#   Bit blanket works so that you can create a bitBlanket object, say ADC,
 # and then read AND write BYTES (the internal cstructure uses c_ubyte) in
-# the forms ADC[0:10] or ADC["SOMEREGISTERNAME"], where the string is
+# the forms ADC[(0,4)] where it's (offset, length) and length can be ommited to
+# use the default value... or use ADC[SOMEREGISTERNAME], where the string is
 # mapped to an offset by a dictionary object passed when the object is
-# initialized. I made a script will parse the table of contents in the
+# initialized. I made a script that will parse the table of contents in the
 # DATASHEET and generate code for a dictionary object. This doesn't support
 # bit-by-bit access, but it may in the future with a similiar dictionary
 # concept. The idea was to make the interface similiar to people who
 # programmed with atmel-studio (avr) or likewise, advanced Arduino.
+# 
 #
-#   This is both the object definition AND an example.
 
 
 class bitBlanket():
-    def __init__(self, uioLabel, size, bitDictionary = None):
-        self.bitDictionary = bitDictionary;
+    def __init__(self, uioLabel, size, defaultWordLength = 4):
+        self.defaultWordLength = defaultWordLength
         self.myUio = Uio(uioLabel)
         self.memBlanket = type("memBlanket", (ctypes.Structure,),
                           {
@@ -36,51 +38,41 @@ class bitBlanket():
                               "__setitem__":bitBlanket.setitem
                         }
                     )
-        #we only need the class definition once, then we get the object and
-        #that's our map. I don't know if the type disappears. I could probably 
-        #wrap this whole thing into one line
         self.memBlanket = self.myUio.map(self.memBlanket)
 
-# The following establish indice/assignment operators for bitBlanket and
-# memBlanket (respectively)
+    byteSize = (ctypes.c_ubyte, ctypes.c_ushort, ctypes.c_uint,
+                         ctypes.c_ulong)
     def __getitem__(self, i):
-        returnValue = 0
-        if (isinstance(i, str)):
-            i = range(self.bitDictionary[i][0], self.bitDictionary[i][0] +
-                      self.bitDictionary[i][1])
-        elif not (isinstance(i,slice)):
-            return self.memBlanket[0][i] #it's only one anyway just get it
-        elif (isinstance(i, slice)):
-            i = range(i.start, i.stop+1) #slices aren't iter. so range > slice
-        else:
-            raise TypeError('subindicies must be integers or dictionary key (strings): %r' % i)
-        for i2 in i:
-            returnValue = returnValue + (self.memBlanket[0][i2] << (8 *
-                                         (i2-i[0])))
-        return returnValue
+        #rehandle slices
+        if isinstance(i, int):
+            i = (i, self.defaultWordLength)
+        return self.memBlanket[i].value
 
     def __setitem__(self, i, value):
-        if (isinstance(i, str)):
-            i = range(self.bitDictionary[i][0], self.bitDictionary[i][0] +
-                      self.bitDictionary[i][1])
-        elif not (isinstance(i,slice)):
-            i = range(i, i+1)
-        elif (isinstance(i, slice)):
-            i = range(i.start, i.stop+1) #slices aren't iter. so range > slice
-        else:
-            raise TypeError('subindicies must be integers or dictionary keys(strings): %r' % i)
-        for i2 in i:
-            tempValue = ctypes.c_ubyte(((ctypes.c_ulong(value).value>> (8 *(
-                i2-i[0]))) &
-                     ctypes.c_ubyte(255).value)) #if you can't tell, dynamic typing terrifies me
-            self.memBlanket[0][i2] = tempValue
+        #rehandle slices
+        #if isinstance(i, int):
+        #    i = (i, self.defaultWordLength)
+        self.memBlanket[i] = value
 
     def getitem(self, i):
-            if not isinstance(i, int):
-                raise TypeError('subindices must be integers: %r' % i)
-            return getattr(self, self._fields_[i][0])
-    def setitem(self, i, value):
-        if not isinstance(i, int):
-            raise TypeError('subindices must be integers: %r' % i)
-        setattr(self, self._fields_[i][0], value)
+        if not isinstance(i, tuple) or (i.__len__() != 2):
+            raise TypeError('subindices must be 2-element tuples: %r' % i)
+        try:
+            pointerType = bitBlanket.byteSize[int(i[1]/2)]
+        except ValueError:
+            print('second indice must be 1, 2, 4, or 8 (bytes)')
+            raise
+        return ctypes.cast(ctypes.byref(getattr(self, "number"), i[0]),
+                           ctypes.POINTER(pointerType)).contents
 
+
+    def setitem(self, i, value):
+        if not isinstance(i, tuple) or (i.__len__() != 2):
+            raise TypeError('subindices must be 2-element tuples: %r' % i)
+        try:
+            pointerType = bitBlanket.byteSize[int(i[1]/2)]
+        except ValueError:
+            print('second indice must be 1, 2, 4, or 8 (bytes)')
+            raise
+        ctypes.cast(ctypes.byref(getattr(self, "number"), i[0]),
+                    ctypes.POINTER(pointerType))[0] = pointerType(value)
