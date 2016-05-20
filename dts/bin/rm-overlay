@@ -7,6 +7,10 @@ use autodie;
 use Fcntl qw( LOCK_EX );
 
 die "Usage: rm-overlay NAME...\n"  unless @ARGV;
+for( @ARGV ) {
+	s,^.*/,,;
+	s,\.dtbo\z,,;
+}
 my %rm; @rm{ @ARGV } = ( 1 ) x @ARGV;
 
 chdir '/sys/kernel/config/device-tree/overlays';
