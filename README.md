@@ -14,10 +14,10 @@ the utils in [dts/bin/](dts/bin/) to add/remove them.
 Example 1 (gpio-triggered IRQ):
 ```bash
 cd dts
-make p9.12-irq.dtbo
-sudo bin/add-overlay p9.12-irq.dtbo
+make gpio-irq.dtbo
+sudo bin/add-overlay gpio-irq.dtbo
 cd ..
-./p9.12-irq.py
+./gpio-irq.py
 # now pull P9.12 to ground to trigger the irq the script is waiting for
 ```
 

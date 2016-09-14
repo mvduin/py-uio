@@ -2,7 +2,7 @@
 
 from uio import Uio
 
-pin = Uio( "p9.12-irq" )
+pin = Uio( "gpio-irq" )
 pin.irq_enable()
 
 pin.irq_recv()
