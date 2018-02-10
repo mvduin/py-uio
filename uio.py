@@ -12,25 +12,17 @@ PAGE_MASK = -PAGE_SIZE
 
 # a physical memory region associated with an uio device
 class MemRegion:
-    def __init__( rgn, uio, info, parent=None ):
-        rgn.uio = uio
+    def __init__( rgn, parent, address, size, name=None, uio=None, index=None ):
+        if parent == None and uio == None:
+            raise RuntimeError( "parent region or uio device required" );
+
         rgn.parent = parent
-        rgn.index = int( re.fullmatch( r'map([0-9])', info.name ).group(1) )
-
-        def getinfo( attr ):
-            with (info/attr).open() as f:
-                return f.readline().rstrip()
-
-        # If no name has been supplied, the region gets an auto-generated name
-        # containing the full DT path.  These are useless, ignore them.
-        rgn.name = getinfo( 'name' )
-        if rgn.name == '' or rgn.name[0] == '/':
-            rgn.name = None
-
-        # get memory region bounds
-        rgn.address = int( getinfo('addr'), 0 )
-        rgn.size = int( getinfo('size'), 0 )
-        rgn.end = rgn.address + rgn.size
+        rgn.address = address
+        rgn.size = size
+        rgn.end = address + size
+        rgn.name = name
+        rgn.uio = uio
+        rgn.index = index
 
         # determine how much of the region can actually be mapped
         if parent:
@@ -47,6 +39,29 @@ class MemRegion:
 
         # mmap() is done lazily when needed
         rgn._mmap = None
+
+    @classmethod
+    def from_sysfs( cls, uio, info, parent=None ):
+        index = int( re.fullmatch( r'map([0-9])', info.name ).group(1) )
+
+        def getinfo( attr ):
+            with (info/attr).open() as f:
+                return f.readline().rstrip()
+
+        # If no name has been supplied, the region gets an auto-generated name
+        # containing the full DT path.  These are useless, ignore them.
+        name = getinfo( 'name' )
+        if name == '' or name[0] == '/':
+            name = None
+
+        # get memory region bounds
+        address = int( getinfo('addr'), 0 )
+        size = int( getinfo('size'), 0 )
+
+        return MemRegion( parent, address, size, name, uio, index )
+
+    def subregion( rgn, offset, size, name=None ):
+        return MemRegion( rgn, rgn.address + offset, size, name );
 
     def __contains__( rgn, child ):
         return child.address >= rgn.address and child.end <= rgn.end
@@ -102,7 +117,7 @@ class Uio:
         rgninfo = self.syspath/'maps';
         if rgninfo.is_dir():
             for info in rgninfo.iterdir():
-                rgn = MemRegion( self, info, parent )
+                rgn = MemRegion.from_sysfs( self, info, parent )
 
                 # allow lookup by index or (if available) by name
                 self._regions[ rgn.index ] = rgn
@@ -111,6 +126,10 @@ class Uio:
 
     def region( self, rgn=0 ):
         return self._regions[ rgn ]
+
+    # shortcut to make subregion of default region (index 0)
+    def subregion( self, offset, size, name=None ):
+        return self.region().subregion( offset, size, name )
 
     # shortcut to map default region (index 0)
     def map( self, struct, offset=0 ):
