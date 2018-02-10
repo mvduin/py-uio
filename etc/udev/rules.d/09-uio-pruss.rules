@@ -1,0 +1,2 @@
+SUBSYSTEM=="uio", ATTR{name}=="pruss_evt0", SYMLINK+="uio/pruss/module"
+SUBSYSTEM=="uio", ATTR{name}=="pruss_evt[0-7]", IMPORT{builtin}="hwdb 'uio_pruss:$attr{name}'"
