@@ -1,7 +1,8 @@
 # assign symlinks to the various irqs
 
 # note: pruss_evt0-7 are actually pruss irq outputs 2-9
-# (irq outputs 0-1 connect to edma, not to the cortex-a8)
+# (irq outputs 0-1 do not connect to the cortex-a8, they cannot to bits 30-31
+# of R31 of both pru cores)
 
 uio_pruss:pruss_evt0
  OF_SYMLINK=uio/pruss/irq2
