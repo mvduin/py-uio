@@ -16,29 +16,54 @@ class MemRegion:
         if parent == None and uio == None:
             raise RuntimeError( "parent region or uio device required" );
 
+        # parent memory region (if any)
         rgn.parent = parent
+
+        # physical address range
         rgn.address = address
         rgn.size = size
         rgn.end = address + size
+
+        # identification
         rgn.name = name
         rgn.uio = uio
         rgn.index = index
 
-        # determine how much of the region can actually be mapped
+        # memory mapping
+        rgn.mappable = 0
+        rgn._mmap = None
+        rgn._offset = 0
+
+        # nothing to map
+        if size <= 0:
+            return
+
         if parent:
+            # need to use parent's mapping
             if rgn not in parent:
                 raise RuntimeError( "memory region outside parent" )
-            rgn.offset = rgn.address - parent.address
-            rgn.mappable = max( parent.mappable - rgn.offset, 0 )
+
+            offset = rgn.address - parent.address
+            if offset >= parent.mappable:
+                return
+
+            rgn.mappable = min( parent.mappable - offset, size )
+            rgn._mmap = parent._mmap
+            rgn._offset = parent._offset + offset
 
         elif rgn.address & ~PAGE_MASK:
-            rgn.mappable = 0    # not page-aligned, can't be mapped
+            return    # not page-aligned, can't be mapped
 
         else:
-            rgn.mappable = rgn.size & PAGE_MASK     # actual mappable size
+            # round down to integral number of pages
+            rgn.mappable = rgn.size & PAGE_MASK
 
-        # mmap() is done lazily when needed
-        rgn._mmap = None
+            # UIO uses a disgusting hack where the memory map index is
+            # passed via the offset argument.  In the actual kernel call
+            # the offset (and length) are in pages rather than bytes, hence
+            # we actually need to pass index * PAGE_SIZE as offset.
+            rgn._mmap = mmap( rgn.uio._fd, rgn.mappable,
+                            offset = rgn.index * PAGE_SIZE )
 
     @classmethod
     def from_sysfs( cls, uio, info, parent=None ):
@@ -66,23 +91,27 @@ class MemRegion:
     def __contains__( rgn, child ):
         return child.address >= rgn.address and child.end <= rgn.end
 
+    # write data into region
+    def write( rgn, data, offset=0 ):
+        data = bytes(data)
+        if offset + len(data) > rgn.mappable:
+            raise RuntimeError( "write extends beyond mappable area" )
+        offset += rgn._offset
+        rgn._mmap[ offset : offset + len(data) ] = data
+
+    # read data from a region
+    def read( rgn, length, offset=0 ):
+        if offset + length > rgn.mappable:
+            raise RuntimeError( "read extends beyond mappable area" )
+        offset += rgn._offset
+        return rgn._mmap[ offset : offset + length ]
+
     # map a struct at given offset within this memory region
     def map( rgn, struct, offset=0 ):
         if offset + sizeof(struct) > rgn.mappable:
             raise RuntimeError( "region is not mappable" )
 
-        if rgn.parent:
-            return rgn.parent.map( struct, offset + rgn.offset )
-
-        if not rgn._mmap:
-            # UIO uses a disgusting hack where the memory map index is
-            # passed via the offset argument.  In the actual kernel call
-            # the offset (and length) are in pages rather than bytes, hence
-            # we actually need to pass index * PAGE_SIZE as offset.
-            rgn._mmap = mmap( rgn.uio._fd, rgn.mappable,
-                            offset = rgn.index * PAGE_SIZE )
-
-        return struct.from_buffer( rgn._mmap, offset )
+        return struct.from_buffer( rgn._mmap, rgn._offset + offset )
 
 
 # uio device object

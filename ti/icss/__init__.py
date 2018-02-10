@@ -4,8 +4,6 @@ from ctypes import ( c_uint32 as uint )
 from .cfg import Cfg
 from .core import Core
 
-IRam = uint * ( 0x04000 >> 2 )
-
 class Icss( Uio ):
     def __init__( self, path ):
         super().__init__( Path( path, 'module' ) )
@@ -25,5 +23,5 @@ class Icss( Uio ):
         #self.uart = self.map( Uart, 0x28000 )
         #self.iep = self.map( Iep, 0x2e000 )
         #self.ecap = self.map( ECap, 0x30000 )
-        self.iram0 = self.map( IRam, 0x34000 )
-        self.iram1 = self.map( IRam, 0x38000 )
+        self.iram0 = self.subregion( 0x34000, 0x04000 )
+        self.iram1 = self.subregion( 0x38000, 0x04000 )
