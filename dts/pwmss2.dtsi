@@ -23,7 +23,7 @@
 	status = "okay";
 	reg = <0x48304000 0x1000>;
 	compatible = "uio";
-	uio-alias = "pwmss2/module";
+	symlink = "uio/pwmss2/module";
 };
 
 &ocp {
@@ -32,7 +32,7 @@
 		interrupt-parent = <&intc>;
 		interrupts = <61>;
 		compatible = "uio";
-		uio-alias = "pwmss2/cap";
+		symlink = "uio/pwmss2/cap";
 	};
 
 	qep2: qep@48304180 {
@@ -40,7 +40,7 @@
 		interrupt-parent = <&intc>;
 		interrupts = <89>;
 		compatible = "uio";
-		uio-alias = "pwmss2/qep";
+		symlink = "uio/pwmss2/qep";
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&qep2_pins>;
@@ -53,7 +53,7 @@
 		interrupt-names = "pwm", "tz";
 		interrupts = <39>, <60>;
 		compatible = "uio";
-		uio-alias = "pwmss2/pwm";
+		symlink = "uio/pwmss2/pwm";
 	};
 };
 
@@ -65,6 +65,6 @@
 		interrupt-parent = <&intc>;
 		interrupts = <60>;
 		compatible = "uio";
-		uio-alias = "pwmss2/pwm-tz";
+		symlink = "uio/pwmss2/pwm-tz";
 	};
 };

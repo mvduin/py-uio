@@ -19,7 +19,7 @@
 	// no idea what a proper place would be to put it
 	gpio-irq {
 		compatible = "uio";
-		uio-alias = "gpio-irq";
+		symlink = "uio/gpio-irq";
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&gpio_irq_pin>;

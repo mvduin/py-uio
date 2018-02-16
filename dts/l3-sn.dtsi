@@ -9,6 +9,6 @@
 		interrupts = <10>;
 
 		compatible = "uio";
-		uio-alias = "l3-sn";
+		symlink = "uio/l3-sn";
 	};
 };

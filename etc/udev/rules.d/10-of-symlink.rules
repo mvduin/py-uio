@@ -1,0 +1,8 @@
+# allow declaring a symlink for a device in DT
+
+ATTR{device/of_node/symlink}!="", \
+	ENV{OF_SYMLINK}="%s{device/of_node/symlink}"
+
+ENV{OF_SYMLINK}!="", \
+	SYMLINK+="%E{OF_SYMLINK}", \
+	TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/dev/%E{OF_SYMLINK}"

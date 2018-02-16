@@ -3,5 +3,5 @@
 &tscadc {
         status = "okay";
         compatible = "uio";
-        uio-alias = "adc";
+        symlink = "uio/adc";
 };
