@@ -18,7 +18,7 @@ class ComponentID( ctypes.Structure ):
             ("type",    uint, 16),
             ("hash",    uint, 24),
             ("version", uint,  8),
-        ];
+        ]
 
 class FlagOutput( ctypes.Structure ):
     src_t = uint  # one bit per input
@@ -26,7 +26,7 @@ class FlagOutput( ctypes.Structure ):
     _fields_ = [
             ("enabled", src_t),  #rw
             ("pending", src_t),  #r-
-        ];
+        ]
 
 class FaultCombiner( ctypes.Structure ):
     _anonymous_ = ["app"]
@@ -34,7 +34,7 @@ class FaultCombiner( ctypes.Structure ):
             ("component", ComponentID), # vendor 1 type 0x37
             ("app",     FlagOutput),
             ("debug",   FlagOutput),
-        ];
+        ]
 
 
 # L3 target agents are capable of logging faults and optionally asserting an

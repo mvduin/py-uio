@@ -14,7 +14,7 @@ PAGE_MASK = -PAGE_SIZE
 class MemRegion:
     def __init__( rgn, parent, address, size, name=None, uio=None, index=None ):
         if parent == None and uio == None:
-            raise RuntimeError( "parent region or uio device required" );
+            raise RuntimeError( "parent region or uio device required" )
 
         # parent memory region (if any)
         rgn.parent = parent
@@ -86,7 +86,7 @@ class MemRegion:
         return MemRegion( parent, address, size, name, uio, index )
 
     def subregion( rgn, offset, size, name=None ):
-        return MemRegion( rgn, rgn.address + offset, size, name );
+        return MemRegion( rgn, rgn.address + offset, size, name )
 
     def __contains__( rgn, child ):
         return child.address >= rgn.address and child.end <= rgn.end
@@ -143,7 +143,7 @@ class Uio:
         # enumerate memory regions
         # beware that if there are none, the dir is absent rather than empty
         self._regions = {}
-        rgninfo = self.syspath/'maps';
+        rgninfo = self.syspath/'maps'
         if rgninfo.is_dir():
             for info in rgninfo.iterdir():
                 rgn = MemRegion.from_sysfs( self, info, parent )

@@ -9,13 +9,13 @@ class Icss( Uio ):
         super().__init__( Path( path, 'module' ) )
 
         try:
-            self.ddr = self.region( 'ddr' );
+            self.ddr = self.region( 'ddr' )
         except KeyError:
-            self.ddr = None;
+            self.ddr = None
 
-        self.dram0 = self.subregion( 0x00000, 0x02000 );
-        self.dram1 = self.subregion( 0x02000, 0x02000 );
-        self.dram2 = self.subregion( 0x10000, 0x10000 );
+        self.dram0 = self.subregion( 0x00000, 0x02000 )
+        self.dram1 = self.subregion( 0x02000, 0x02000 )
+        self.dram2 = self.subregion( 0x10000, 0x10000 )
         #self.intc = self.map( Intc, 0x20000 )
         self.core0 = self.map( Core, 0x22000 )
         self.core1 = self.map( Core, 0x24000 )

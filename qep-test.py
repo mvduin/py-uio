@@ -20,7 +20,7 @@ m.timer_counter = 0
 
 m.io_config = 0
 m.ctr_config = 1 << 1 | 1 << 3 | 1 << 12 | 2 << 4
-m.irq_enabled = 0xffe;
+m.irq_enabled = 0xffe
 
 lastpos = -1
 

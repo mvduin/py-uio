@@ -5,7 +5,7 @@ from ti.icss import Icss
 pruss = Icss( "pruss" )
 
 # some sensible defaults
-pruss.cfg.intc = 0;
+pruss.cfg.intc = 0
 pruss.cfg.idlemode = 'auto'
 pruss.cfg.standbymode = 'auto'
 pruss.cfg.standbyreq = False
