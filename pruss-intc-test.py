@@ -35,7 +35,7 @@ with open('pruss-intc-test-fw.bin', 'rb') as f:
 class Params( ctypes.Structure ):
     _fields_ = [
             ("delay", ctypes.c_uint32),
-            ("event", ctypes.c_uint32),
+            ("event", ctypes.c_uint8),
         ]
 
 params0 = pruss.dram0.map( Params )
