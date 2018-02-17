@@ -3,7 +3,7 @@
 #include "irq.h"
 
 // Example for making a gpio-triggered irq available via uio.  The specific
-// gpio usedi n this example is P9.12 but it should be easy to change that.
+// gpio used in this example is P9.12 but it should be easy to change that.
 //
 // Note that you can achieve a similar thing using the sysfs gpio interface.
 
@@ -25,6 +25,6 @@
 		pinctrl-0 = <&gpio_irq_pin>;
 
 		interrupt-parent = <&gpio1>;
-		interrupts = <28 IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
 	};
 };

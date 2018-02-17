@@ -5,5 +5,11 @@ from uio import Uio
 pin = Uio( "gpio-irq" )
 pin.irq_enable()
 
-pin.irq_recv()
-print( "Ping!" )
+while True:
+    pin.irq_recv()
+    print( "Ping!" )
+
+    # If the irq is level-triggered instead of edge-triggered, you should
+    # ensure that it is no longer asserted before reenabling it, otherwise
+    # it will just immediately trigger again.
+    pin.irq_enable()
