@@ -2,7 +2,7 @@
 
 from uio import Uio
 
-pin = Uio( "gpio-irq" )
+pin = Uio( "/dev/uio/gpio-irq" )
 pin.irq_enable()
 
 while True:

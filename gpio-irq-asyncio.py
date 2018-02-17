@@ -5,7 +5,7 @@ from uio import Uio
 
 loop = asyncio.get_event_loop()
 
-pin = Uio( "gpio-irq", blocking=False )
+pin = Uio( "/dev/uio/gpio-irq", blocking=False )
 pin.irq_enable()
 
 def irq_callback():

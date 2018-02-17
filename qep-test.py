@@ -2,7 +2,7 @@
 
 from ti.pwmss import Pwmss
 
-qep = Pwmss( "pwmss2" ).qep
+qep = Pwmss( "/dev/uio/pwmss2" ).qep
 m = qep.regs
 
 FCK = 10**8  # 100 MHz

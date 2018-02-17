@@ -10,7 +10,7 @@ from ctypes import c_uint32 as uint
 # Welcome to the most fussy register space on the SoC!
 # Only single word access allowed. Byte/halfword/multi-word access = bus error.
 
-l3_sn = Uio( "l3-sn" )
+l3_sn = Uio( "/dev/uio/l3-sn" )
 
 class ComponentID( ctypes.Structure ):
     _fields_ = [

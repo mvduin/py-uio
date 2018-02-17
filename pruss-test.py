@@ -2,7 +2,7 @@
 
 from ti.icss import Icss
 
-pruss = Icss( "pruss" )
+pruss = Icss( "/dev/uio/pruss/module" )
 
 # some sensible defaults
 pruss.cfg.intc = 0

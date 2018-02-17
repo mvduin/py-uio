@@ -4,14 +4,13 @@
 ## aka PRUSS, but not to be confused with the old one of Freon/Primus.
 
 from uio import Uio
-from pathlib import Path
 from .cfg import Cfg
 from .core import Core
 from .intc import Intc
 
 class Icss( Uio ):
     def __init__( self, path ):
-        super().__init__( Path( path, 'module' ) )
+        super().__init__( path )
 
         try:
             self.ddr = self.region( 'ddr' )

@@ -8,8 +8,8 @@ EVENT0 = 16 # range 16..31
 EVENT1 = 17 # range 16..31
 IRQ = 2     # range 2..9
 
-pruss = Icss( "pruss" )
-irq = Uio( "pruss/irq%d" % IRQ )
+pruss = Icss( "/dev/uio/pruss/module" )
+irq = Uio( "/dev/uio/pruss/irq%d" % IRQ )
 intc = pruss.intc
 
 pruss.core0.full_reset()
