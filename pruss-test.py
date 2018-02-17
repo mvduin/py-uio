@@ -14,11 +14,11 @@ pruss.core0.full_reset()
 pruss.core1.full_reset()
 
 
-# clear iram
+# clear iram (not really necessary)
 pruss.iram0.write( bytearray(8192) )
 
 # load program
-with open('pru-test-fw.bin', 'rb') as f:
+with open('pruss-test-fw.bin', 'rb') as f:
     pruss.iram0.write( f.read() )
 
 # alternatively you can access iram as an array of instructions:
