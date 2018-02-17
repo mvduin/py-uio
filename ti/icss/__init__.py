@@ -7,6 +7,7 @@ from uio import Uio
 from pathlib import Path
 from .cfg import Cfg
 from .core import Core
+from .intc import Intc
 
 class Icss( Uio ):
     def __init__( self, path ):
@@ -23,7 +24,7 @@ class Icss( Uio ):
         self.dram2 = self.subregion( 0x10000, 0x10000 )
 
         # interrupt controller
-        #self.intc = self.map( Intc, 0x20000 )
+        self.intc  = self.map( Intc, 0x20000 )
 
         # core control/debug
         self.core0 = self.map( Core, 0x22000 )
