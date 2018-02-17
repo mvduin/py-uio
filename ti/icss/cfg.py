@@ -5,6 +5,7 @@
 
 import ctypes
 from ctypes import c_uint32 as uint
+from ti.irqc4 import IrqCombiner
 
 
 IDLEMODES = ['force', 'block', 'auto']
@@ -92,10 +93,7 @@ class Cfg( ctypes.Structure ):
 
 
             # parity error irqs
-            ("irq_enabled",  uint),
-            ("irq_pending",  uint),
-            ("_irq_clear",   uint),
-            ("_irq_set",     uint),
+            ("parity_irq", IrqCombiner),
             # bits  0- 3  rc  core 0 iram bytes 0-3
             # bits  4- 7  rc  data ram 0 bytes 0-3
             # bits  8-11  rc  core 1 iram bytes 0-3
