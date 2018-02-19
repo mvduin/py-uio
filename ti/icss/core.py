@@ -41,9 +41,9 @@
 ##
 ##
 ## The PRU core has a 32-bit VBUSP slave port with three address spaces:
-##	core control registers
-##	debug registers
-##	instruction ram (iram)
+##      core control registers
+##      debug registers
+##      instruction ram (iram)
 ##
 ## The debug and iram spaces are only accessible when the core is halted.
 ##
@@ -52,6 +52,17 @@
 
 import ctypes
 from ctypes import ( c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint )
+
+nRESET  = 1 <<  0
+RUN     = 1 <<  1
+SLEEP   = 1 <<  2
+PROFILE = 1 <<  3
+SINGLE  = 1 <<  8
+EXC     = 1 << 13
+BIG_END = 1 << 14
+BUSY    = 1 << 15
+
+CONTROL_MASK = nRESET | RUN | SLEEP | PROFILE | SINGLE
 
 class Core( ctypes.Structure ):
     _fields_ = [
@@ -78,14 +89,17 @@ class Core( ctypes.Structure ):
             # The halt instruction causes the core to halt on (rather than
             # after) that instruction: neither the program counter nor the
             # cycle counter is advanced.  An invalid instruction behaves
-            # similarly but also sets the exception flag.
+            # similarly but also sets the exception flag.  The exception flag
+            # is cleared when the core is reenabled (not when it is reset!).
             #
-            # Resetting the core loads reset_pc into pc and clears the stall
-            # and cycle counters, but doesn't seem to do much more than that.
-            # In particular, the control register is mostly unaffected, hence
-            # writing 2 to control will start the core at reset_pc.
-            #
-            # XXX does reset affect carry-bit ? loop state ?
+            # Resetting the core:
+            #   - loads reset_pc into cur_pc
+            #   - resets the stall and cycle counters
+            #   - clears the carry-flag
+            #   - resets the hardware loop state
+            # It does not seem to affect any other visible state.  In
+            # particular, the control register is unaffected, hence writing 2
+            # to control will start the core at reset_pc.
 
             ("reset_pc",    ushort),  #rw  loaded into pc when core is reset
             ("pc",          ushort),  #r-  current program counter
@@ -121,18 +135,46 @@ class Core( ctypes.Structure ):
         ]
 
     def full_reset( self, pc=0 ):
+        self.halt()
         self.reset_pc = pc
         self.control = 0
-        assert( self.control == 1 )
+        assert( ( self.control & ( CONTROL_MASK | BUSY ) ) == nRESET )
         self.wake_en = 0
-        self.cycles = 0
         self.blk[:] = (0,) * 4
         self.ptr[:] = (0,) * 4
         self.r[:] = (0,) * 32
 
-    def run( self ):
-        self.control |= 1 << 1
+    def halt( self, *, wakeup=True, check=None ):
+        control = self.control
+        if not ( control & ( RUN | BUSY ) ):
+            return True
+        if wakeup:
+            control &= ~SLEEP
+        else:
+            control |= SLEEP
+        self.control = control & ~RUN
+        for i in range(10):
+            if self.halted:
+                return True
+        if check == None:
+            check = wakeup
+        if check:
+            raise RuntimeError("PRU core failed to halt")
+        return False
+
+    def run( self, *, single=False, profile=None ):
+        control = self.control
+        if control & ( RUN | BUSY ):
+            raise RuntimeError("PRU core is not halted")
+        if profile == None:
+            profile = bool( control & PROFILE )
+        control = nRESET | RUN
+        if single:
+            control |= SINGLE
+        if profile:
+            control |= PROFILE
+        self.control = control
 
     @property
     def halted( self ):
-        return not ( self.control & (1 << 15) )
+        return not ( self.control & ( RUN | BUSY ) )
