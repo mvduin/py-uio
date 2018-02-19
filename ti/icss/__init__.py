@@ -40,3 +40,9 @@ class Icss( Uio ):
         # instruction memories
         self.iram0 = self.subregion( 0x34000, 0x04000 )
         self.iram1 = self.subregion( 0x38000, 0x04000 )
+
+        # make it easier to find everything related to one core
+        self.core0.dram = self.dram0
+        self.core0.iram = self.iram0
+        self.core1.dram = self.dram1
+        self.core1.iram = self.iram1
