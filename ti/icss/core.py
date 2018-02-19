@@ -64,6 +64,50 @@ BUSY    = 1 << 15
 
 CONTROL_MASK = nRESET | RUN | SLEEP | PROFILE | SINGLE
 
+class State( int ):
+    @property
+    def running( self ):
+        return bool( self & RUN )
+
+    @property
+    def sleeping( self ):
+        return bool( self & SLEEP )
+
+    @property
+    def profiling( self ):
+        return bool( self & PROFILE )
+
+    @property
+    def crashed( self ):
+        return bool( self & EXC )
+
+    @property
+    def halted( self ):
+        return not ( self & BUSY )
+
+    def __new__( self, control ):
+        if control & RUN:
+            control |= BUSY  # probably redundant, but just to be sure
+        if control & SINGLE:
+            control &= ~RUN
+        return int.__new__( self, control )
+
+    def __str__( self ):
+        if self.halted:
+            s = 'halted'
+            if self.crashed:
+                s += ', crashed'
+        elif self.running:
+            s = 'running'
+        else:
+            s = 'halting'
+        if self.sleeping:
+            s += ', sleeping'
+        if self.profiling:
+            s += ', profiling'
+        return s
+
+
 class Core( ctypes.Structure ):
     _fields_ = [
             ("control",     ushort),  #rw
@@ -153,6 +197,7 @@ class Core( ctypes.Structure ):
         else:
             control |= SLEEP
         self.control = control & ~RUN
+
         for i in range(10):
             if self.halted:
                 return True
@@ -162,13 +207,23 @@ class Core( ctypes.Structure ):
             raise RuntimeError("PRU core failed to halt")
         return False
 
-    def run( self, *, single=False, profile=None ):
+    def run( self, *, pc=None, reset=None, single=False, profile=None ):
         control = self.control
         if control & ( RUN | BUSY ):
             raise RuntimeError("PRU core is not halted")
         if profile == None:
             profile = bool( control & PROFILE )
+        if reset == None:
+            reset = pc != None
+        if pc != None and pc != core.pc and not reset:
+            raise RuntimeError("Cannot change pc without resetting core")
+
+        if pc != None:
+            self.reset_pc = pc
+
         control = nRESET | RUN
+        if reset:
+            control &= nRESET
         if single:
             control |= SINGLE
         if profile:
@@ -178,3 +233,35 @@ class Core( ctypes.Structure ):
     @property
     def halted( self ):
         return not ( self.control & ( RUN | BUSY ) )
+
+    @property
+    def state( self ):
+        return State( self.control )
+
+    @property
+    def profiling( self ):
+        return bool( self.control & PROFILE )
+
+    @profiling.setter
+    def profiling( self, value ):
+        control = self.control | SLEEP
+        if control & SINGLE:
+            control &= ~RUN
+        if value:
+            control |= PROFILE
+        else:
+            control &= ~PROFILE
+        self.control = control
+
+    def profiling_sample( self ):
+        # Sample cycles and stalls near-simultaneously (single 64-bit read).
+        # It takes 3 pru cycles to sample each field, therefore you should add
+        # 3 to cycles if you call this method while the counters are running to
+        # compensate for the time passed before stalls was sampled.  Also keep
+        # in mind that the counters are not accurately maintained when sleeping.
+        if not hasattr( self, '_profiling' ):
+            self._profiling = ctypes.c_uint64.from_buffer( self, 0x0c )
+        x = self._profiling.value
+        cycles = x & 0xffffffff
+        stalls = x >> 32
+        return (cycles, stalls)
