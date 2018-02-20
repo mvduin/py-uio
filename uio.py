@@ -1,10 +1,10 @@
 import os
 import re
+import ctypes
 from os import O_RDWR, O_CLOEXEC, O_NONBLOCK
 from stat import S_ISCHR
 from mmap import mmap
 from pathlib import Path
-from ctypes import sizeof
 
 PAGE_SHIFT = 12
 PAGE_SIZE = 1 << PAGE_SHIFT
@@ -14,7 +14,9 @@ PAGE_MASK = -PAGE_SIZE
 class MemRegion:
     def __init__( rgn, parent, address, size, name=None, uio=None, index=None ):
         if parent == None and uio == None:
-            raise RuntimeError( "parent region or uio device required" )
+            raise ValueError( "parent region or uio device required" )
+        if size < 0:
+            raise ValueError( "invalid size" )
 
         # parent memory region (if any)
         rgn.parent = parent
@@ -32,38 +34,36 @@ class MemRegion:
         # memory mapping
         rgn.mappable = 0
         rgn._mmap = None
-        rgn._offset = 0
 
         # nothing to map
-        if size <= 0:
+        if size == 0:
             return
 
         if parent:
             # need to use parent's mapping
             if rgn not in parent:
-                raise RuntimeError( "memory region outside parent" )
+                raise ValueError( "memory region not inside parent" )
 
             offset = rgn.address - parent.address
             if offset >= parent.mappable:
                 return
 
             rgn.mappable = min( parent.mappable - offset, size )
-            rgn._mmap = parent._mmap
-            rgn._offset = parent._offset + offset
+            rgn._mmap = parent._mmap[ offset : offset + rgn.mappable ]
 
         elif rgn.address & ~PAGE_MASK:
             return    # not page-aligned, can't be mapped
 
         else:
             # round down to integral number of pages
-            rgn.mappable = rgn.size & PAGE_MASK
+            rgn.mappable = size & PAGE_MASK
 
             # UIO uses a disgusting hack where the memory map index is
             # passed via the offset argument.  In the actual kernel call
             # the offset (and length) are in pages rather than bytes, hence
             # we actually need to pass index * PAGE_SIZE as offset.
-            rgn._mmap = mmap( rgn.uio._fd, rgn.mappable,
-                            offset = rgn.index * PAGE_SIZE )
+            rgn._mmap = memoryview( mmap( rgn.uio._fd, rgn.mappable,
+                                            offset = rgn.index * PAGE_SIZE ) )
 
     @classmethod
     def from_sysfs( cls, uio, info, parent=None ):
@@ -91,27 +91,48 @@ class MemRegion:
     def __contains__( rgn, child ):
         return child.address >= rgn.address and child.end <= rgn.end
 
-    # write data into region
+    # write data into region at given offset
     def write( rgn, data, offset=0 ):
         data = bytes(data)
-        if offset + len(data) > rgn.mappable:
-            raise RuntimeError( "write extends beyond mappable area" )
-        offset += rgn._offset
-        rgn._mmap[ offset : offset + len(data) ] = data
+        if offset < 0 or offset > rgn.mappable:
+            raise ValueError( "invalid offset" )
+        end = offset + len( data )
+        if offset == end:
+            return
+        if end > rgn.mappable:
+            raise ValueError( "write extends beyond mappable area" )
+        rgn._mmap[ offset : end ] = data
 
-    # read data from a region
-    def read( rgn, length, offset=0 ):
-        if offset + length > rgn.mappable:
-            raise RuntimeError( "read extends beyond mappable area" )
-        offset += rgn._offset
-        return rgn._mmap[ offset : offset + length ]
+    # read data from region at given offset
+    def read( rgn, length=None, offset=0 ):
+        # read ctypes instance (does all necessary error checking)
+        if isinstance( length, type ):
+            return length.from_buffer_copy( rgn._mmap, offset )
 
-    # map a struct at given offset within this memory region
-    def map( rgn, struct, offset=0 ):
-        if offset + sizeof(struct) > rgn.mappable:
-            raise RuntimeError( "region is not mappable" )
+        # read bytes
+        return bytes( rgn.map( length, offset ) )
 
-        return struct.from_buffer( rgn._mmap, rgn._offset + offset )
+    # map data from region at given offset
+    def map( rgn, length=None, offset=0 ):
+        if rgn._mmap == None:
+            raise RuntimeError( "memory region cannot be mapped" )
+
+        if isinstance( length, type ):
+            # map ctypes instance (does all necessary error checking)
+            return length.from_buffer( rgn._mmap, offset )
+
+        if isinstance( length, int ) or length == None:
+            # map byte-range
+            if offset < 0:
+                raise ValueError( "offset cannot be negative" )
+            end = rgn.mappable
+            if length != None:
+                end = min( offset + length, end )
+            if offset == 0 and end == rgn.mappable:
+                return rgn._mmap
+            return rgn._mmap[ offset : end ]
+
+        raise TypeError( "first argument should be length or ctypes type" )
 
 
 # uio device object

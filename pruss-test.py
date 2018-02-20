@@ -27,7 +27,8 @@ with open('pruss-test-fw.bin', 'rb') as f:
 #       from ctypes import c_uint32 as uint
 #
 #       # map iram as array of words
-#       iram = core.iram.map( uint * 2048 )
+#       iram = core.iram.map( uint * 2048 )   # option one
+#       iram = core.iram.map().cast( 'I' )    # option two
 #
 #       iram[0] = 0x0101e0e0  # add r0, r0, 1
 #       iram[1] = 0x2a000000  # halt
