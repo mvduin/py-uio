@@ -12,12 +12,7 @@ pruss = Icss( "/dev/uio/pruss/module" )
 irq = Uio( "/dev/uio/pruss/irq%d" % IRQ )
 intc = pruss.intc
 
-pruss.core0.full_reset()
-pruss.core1.full_reset()
-
-pruss.cfg.intc = 0
-
-intc.initialize()
+pruss.initialize()
 
 # clear and enable events and route them to our irq
 for event in EVENT0, EVENT1:

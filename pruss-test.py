@@ -3,15 +3,7 @@
 from ti.icss import Icss
 
 pruss = Icss( "/dev/uio/pruss/module" )
-
-# some sensible defaults
-pruss.cfg.intc = 0
-pruss.cfg.idlemode = 'auto'
-pruss.cfg.standbymode = 'auto'
-pruss.cfg.standbyreq = False
-
-pruss.core0.full_reset()
-pruss.core1.full_reset()
+pruss.initialize()
 
 core = pruss.core0
 

@@ -46,3 +46,19 @@ class Icss( Uio ):
         self.core0.iram = self.iram0
         self.core1.dram = self.dram1
         self.core1.iram = self.iram1
+
+    def initialize( self ):
+        # reset prcm controls to default just in case
+        self.cfg.idlemode = 'auto'
+        self.cfg.standbymode = 'auto'
+
+        # enable OCP master ports
+        self.cfg.standbyreq = False
+
+        # initialize cores
+        self.core0.full_reset()
+        self.core1.full_reset()
+
+        # initialize interrupt controller
+        self.cfg.intc = 0
+        self.intc.initialize()
