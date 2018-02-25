@@ -1,9 +1,36 @@
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt0", SYMLINK+="uio/pruss/module"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt0", SYMLINK+="uio/pruss/irq2"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt1", SYMLINK+="uio/pruss/irq3"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt2", SYMLINK+="uio/pruss/irq4"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt3", SYMLINK+="uio/pruss/irq5"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt4", SYMLINK+="uio/pruss/irq6"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt5", SYMLINK+="uio/pruss/irq7"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt6", SYMLINK+="uio/pruss/irq8"
-SUBSYSTEM=="uio", ATTR{name}=="pruss_evt7", SYMLINK+="uio/pruss/irq9"
+# apply this file only to pruss_uio devices and their children
+# (unfortunately DRIVERS!="pruss_uio" doesn't work, hence this workaround)
+DRIVERS=="pruss_uio",  GOTO="PRUSS"
+GOTO="END"
+LABEL="PRUSS"
+
+
+# obtain pruss instance name:
+#	1. check for device tree property
+#	2. try to inherit from parent
+#	3. default to "pruss"
+
+ENV{PRUSS_INSTANCE}=="",  ENV{PRUSS_INSTANCE}="$attr{of_node/pruss-instance}"
+ENV{PRUSS_INSTANCE}=="",  IMPORT{parent}="PRUSS_INSTANCE"
+ENV{PRUSS_INSTANCE}=="",  ENV{PRUSS_INSTANCE}="pruss"
+
+
+# create symlinks for the uio devices:
+#	one for the memory/register spaces (any of the modules work for that)
+#	one per irq that can be received by linux
+
+SUBSYSTEM!="uio",  GOTO="END"
+
+ATTR{name}=="pruss_evt0",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/module"
+
+ATTR{name}=="pruss_evt0",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq2"
+ATTR{name}=="pruss_evt1",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq3"
+ATTR{name}=="pruss_evt2",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq4"
+ATTR{name}=="pruss_evt3",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq5"
+ATTR{name}=="pruss_evt4",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq6"
+ATTR{name}=="pruss_evt5",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq7"
+ATTR{name}=="pruss_evt6",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq8"
+ATTR{name}=="pruss_evt7",  SYMLINK+="uio/$env{PRUSS_INSTANCE}/irq9"
+
+
+LABEL="END"
