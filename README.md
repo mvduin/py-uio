@@ -1,7 +1,26 @@
 # py-uio
 Userspace I/O in Python
 
-All examples currently target the BeagleBone Black.
+All examples currently target the BeagleBone family of devices.
+
+This library and its examples are for interfacing with uio devices, in
+particular those using the `uio_pdrv_genirq` driver and those using the
+`uio_pruss` driver.
+
+There isn't much documentation yet other than this README, but a little bit can
+be found on [the wiki](https://github.com/mvduin/py-uio/wiki).
+
+## uio_pruss
+
+Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
+`/etc/udev/rules.d/`, then run `sudo udevadm control -R` and `sudo udevadm
+trigger -s uio`, or just reboot.  This creates symlinks (in `/dev/uio/`) to
+allow the uio devices to be located easily.
+
+Now you can try out [pruss-test.py](pruss-test.py) or
+[pruss-intc-test.py](pruss-intc-test.py).
+
+## uio_pdrv_genirq
 
 Copy the stuff in the [etc/](etc/) dir to the corresponding places in `/etc`
 and tweak the udev rule to taste (user/group/permissions).
