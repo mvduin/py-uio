@@ -13,6 +13,7 @@ END
 
 my $n = 0;
 my $inside = 0;
+my $inprop = 0;
 my( $line, $file ) = ( 0, '-' );
 
 sub fail {  die $_, "$file:$line: @_\n"  }
@@ -24,6 +25,7 @@ my $pathRE = qr!/|(?:/$nameRE)+!;
 while( <> ) {
 	++$line;
 	next if /^\s*\z/;
+
 	if( /^# (\d+) "([^"]+)"(?: \d+)?\s*\z/ ) {
 		( $line, $file ) = ( $1-1, $2 );
 		next;
@@ -36,8 +38,20 @@ while( <> ) {
 			$inside = 0;
 		}
 		next;
+	}
 
-	} elsif( /^(&\w+)\s*\{\s*\z/ ) {
+	if( $inprop ) {
+		/^\s/ or fail "Parse error";
+	} elsif( s!^($nameRE\s*=)!/ { $1! ) {
+		$inprop = 1;
+	}
+
+	if( $inprop ) {
+		$inprop = 0  if s/;\s*\z/; };\n/;
+		next;
+	}
+
+	if( /^(&\w+)\s*\{\s*\z/ ) {
 		$_ = "target = <$1>";
 
 	} elsif( m!^(?|&\{($pathRE)\}|($pathRE))\s*\{\s*\z! ) {
