@@ -9,7 +9,7 @@ FCK = 10**8  # 100 MHz
 
 # disable module, clear all irqs
 m.ctr_config = 0
-m.irq_clear( 0xfff )
+m.irq_clear = 0xfff
 
 # 96 steps per full revolution
 m.maximum = 96 - 1
@@ -42,7 +42,7 @@ irq_msgs = (
 while True:
     pos = m.position
     irq = m.irq_pending
-    m.irq_clear( irq )
+    m.irq_clear = irq
 
     if irq & 0x7f6 or pos != lastpos:
         s = "pos {0:02d}".format( pos )

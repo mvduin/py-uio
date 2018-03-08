@@ -2,20 +2,27 @@ from uio import Uio
 from pathlib import Path
 import ctypes
 from ctypes import c_uint32 as uint
-from .qep import Qep
+from .eqep import EQep
+
+class Clk( ctypes.Structure ):
+    _fields_ = [
+            ("cap",  uint,  4),
+            ("qep",  uint,  4),
+            ("pwm",  uint,  4),
+        ]
 
 class Regs( ctypes.Structure ):
     _fields_ = [
             ("ident",       uint),
-            # 0x47400001  subarctic 2.1
+            # 0x4_740_00_01  subarctic 2.1
+
             ("sysconfig",   uint),
-            ("cap_clkreq",  uint,  4),
-            ("qep_clkreq",  uint,  4),
-            ("pwm_clkreq",  uint,  4),
-            ("",            uint, 20),
-            ("cap_clkack",  uint,  4),
-            ("qep_clkack",  uint,  4),
-            ("pwm_clkack",  uint,  4),
+	    # bit   0      rx  reset
+	    # bit   1      rw  emu-free
+	    # bits  2- 3   rw  idlemode  (no wakeup support, default is auto)
+
+            ("clkreq",      Clk),
+            ("clkack",      Clk),
         ]
 
     # clkreq/clkack values:
@@ -39,6 +46,7 @@ class Regs( ctypes.Structure ):
     # may be recoverable by clearing the error in the target agent... I'll try
     # that when I find the time.)
 
+
 class Pwmss( Uio ):
     def __init__( self, path ):
         path = Path( '/dev/uio', path )
@@ -49,15 +57,15 @@ class Pwmss( Uio ):
         self.regs = self.map( Regs )
 
         # submodule devices (created lazily)
-        self._qep = None
         self._cap = None
+        self._qep = None
         self._pwm = None
 
     @property
     def qep( self ):
         if not self._qep:
-            self.regs.qep_clkreq = 1
-            if self.regs.qep_clkack != 1:
+            self.regs.clkreq.qep = 1
+            if self.regs.clkack.qep != 1:
                 raise RuntimeError( "submodule clock failure?" )
-            self._qep = Qep( self.path.parent/'qep', parent=self )
+            self._qep = EQep( self.path.parent/'qep', parent=self )
         return self._qep
