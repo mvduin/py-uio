@@ -2,6 +2,7 @@ from uio import Uio
 from pathlib import Path
 import ctypes
 from ctypes import c_uint32 as uint
+from .ecap import ECap
 from .eqep import EQep
 
 class Clk( ctypes.Structure ):
@@ -60,6 +61,15 @@ class Pwmss( Uio ):
         self._cap = None
         self._qep = None
         self._pwm = None
+
+    @property
+    def cap( self ):
+        if not self._cap:
+            self.regs.clkreq.cap = 1
+            if self.regs.clkack.cap != 1:
+                raise RuntimeError( "submodule clock failure?" )
+            self._cap = ECap( self.path.parent/'cap', parent=self )
+        return self._cap
 
     @property
     def qep( self ):
