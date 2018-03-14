@@ -215,7 +215,7 @@ class Core( ctypes.Structure ):
             profile = bool( control & PROFILE )
         if reset == None:
             reset = pc != None
-        if pc != None and pc != core.pc and not reset:
+        if pc != None and pc != self.pc and not reset:
             raise RuntimeError("Cannot change pc without resetting core")
 
         if pc != None:
