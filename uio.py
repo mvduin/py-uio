@@ -199,3 +199,42 @@ class Uio:
     #   - after handling it, if level-triggered
     def irq_recv( self ):
         os.read( self._fd, 4 )
+
+
+
+# utilities to fix some annoying ctypes behaviour
+
+function = type( lambda: () )
+
+class cached_getter:
+    __slots__ = ('name', 'desc',)
+
+    def __init__( self, desc, name=None ):
+        if name is None:
+            name = desc.__name__
+        self.name = name
+        self.desc = desc
+
+    def __get__( self, instance, owner ):
+        if not isinstance( self.desc, function ):
+            value = self.desc.__get__( instance, owner )
+            if instance is not None:
+                instance.__dict__[ self.name ] = value
+            return value
+        elif instance is not None:
+            value = self.desc( instance )
+            instance.__dict__[ self.name ] = value
+            return value
+        else:
+            return self
+
+def fix_ctypes_struct( cls ):
+    instance = cls()
+    for name, typ in cls._fields_:
+        if name == "":
+            continue
+        desc = cls.__dict__[ name ]
+        if not isinstance( desc.__get__( instance, cls ), typ ):
+            continue
+        setattr( cls, name, cached_getter( desc, name ) )
+    return cls

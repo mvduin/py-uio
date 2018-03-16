@@ -1,4 +1,4 @@
-from uio import Uio
+from uio import Uio, fix_ctypes_struct, cached_getter
 import ctypes
 from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
 from .eirq import EIrq
@@ -21,6 +21,7 @@ class Pwm( ctypes.Structure ):
             ("ld_compare",  ctr_t),     #rw  loaded into compare on counter wrap
         ]
 
+@fix_ctypes_struct
 class ECap( ctypes.Structure ):
     _fields_ = [
             ("counter",     ctr_t),     #rw
@@ -91,10 +92,8 @@ class ECap( ctypes.Structure ):
             #   0x4_4d2_21_00  (v1.0.4 on subarctic 2.1)
         ]
 
-    @property
+    @cached_getter
     def pwm( self ):
-        if not hasattr( self, '_pwm' ):
-            self._pwm = Pwm.from_buffer( self.capture )
-        return self._pwm
+        return Pwm.from_buffer( self.capture )
 
 assert ctypes.sizeof(ECap) == 0x60

@@ -22,6 +22,7 @@ class EIrq( ctypes.Structure ):
         if eoi:
             bits |= 1
         self._clear = bits
+        self._clear  # ocp barrier
         if bits & 1 and hasattr( self, 'uio' ):
             self.uio.irq_enable()
 
