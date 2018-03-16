@@ -17,8 +17,9 @@ Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
 trigger -s uio`, or just reboot.  This creates symlinks (in `/dev/uio/`) to
 allow the uio devices to be located easily.
 
-Now you can try out [pruss-test.py](pruss-test.py) or
-[pruss-intc-test.py](pruss-intc-test.py).
+Now you can try out [pruss-test.py](pruss-test.py),
+[pruss-intc-test.py](pruss-intc-test.py), or
+[pruss-ddr-ping.py](pruss-ddr-ping.py).
 
 ## uio_pdrv_genirq
 
