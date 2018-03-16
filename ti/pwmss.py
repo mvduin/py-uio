@@ -79,5 +79,7 @@ class Pwmss( Uio ):
             self.regs.clkreq.qep = 1
             if self.regs.clkack.qep != 1:
                 raise RuntimeError( "submodule clock failure?" )
-            self._qep = EQep( self.path.parent/'qep', parent=self )
+            uio = Uio( self.path.parent/'qep', parent=self )
+            self._qep = uio.map( EQep )
+            self._qep.irq.uio = uio
         return self._qep

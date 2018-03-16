@@ -1,14 +1,15 @@
-from uio import Uio
+from uio import Uio, fix_ctypes_struct
 import ctypes
 from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
+from .eirq import EIrq
 
 pos_t = uint    # position counter
 tim_t = uint    # unit timer
 wdt_t = ushort  # watchdog timer
 imt_t = ushort  # interval measurement timer
-irq_t = ushort  # irq bits
 
-class Regs( ctypes.Structure ):
+@fix_ctypes_struct
+class EQep( ctypes.Structure ):
     _fields_ = [
 	    #-------- position counter --------------------------------------------
 	    #
@@ -43,11 +44,7 @@ class Regs( ctypes.Structure ):
 
 	    #-------- status / event reporting ------------------------------------
             #
-            ("irq_enabled",     irq_t),     #rw
-            ("irq_pending",     irq_t),     #r-
-            ("irq_clear",       irq_t),     #-c
-            ("irq_set",         irq_t),     #-s
-
+            ("irq",             EIrq),
             ("status",          ushort),    #rc
 
 	    #-------- interval measurement timer (aka "capture timer") ------------
@@ -70,11 +67,4 @@ class Regs( ctypes.Structure ):
             #   0x4_4d3_11_03  (v1.3.2 on subarctic 2.1)
         ]
 
-assert ctypes.sizeof(Regs) == 0x60
-
-
-class EQep( Uio ):
-    def __init__( self, *args, **kwds ):
-        super().__init__( *args, **kwds )
-
-        self.regs = self.map( Regs )
+assert ctypes.sizeof(EQep) == 0x60
