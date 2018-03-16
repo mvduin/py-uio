@@ -15,7 +15,10 @@ class Icss( Uio ):
         try:
             self.ddr = self.region( 'ddr' )
         except KeyError:
-            self.ddr = None
+            try:
+                self.ddr = self.region( 1 )
+            except KeyError:
+                self.ddr = None
 
         # data memories
         self.dram0 = self.subregion( 0x00000, 0x02000 )
