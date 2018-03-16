@@ -68,7 +68,9 @@ class Pwmss( Uio ):
             self.regs.clkreq.cap = 1
             if self.regs.clkack.cap != 1:
                 raise RuntimeError( "submodule clock failure?" )
-            self._cap = ECap( self.path.parent/'cap', parent=self )
+            uio = Uio( self.path.parent/'cap', parent=self )
+            self._cap = uio.map( ECap )
+            self._cap.irq.uio = uio
         return self._cap
 
     @property

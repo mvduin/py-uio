@@ -1,6 +1,7 @@
 from uio import Uio
 import ctypes
 from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
+from .eirq import EIrq
 
 ctr_t = uint    # counter value
 irq_t = ushort
@@ -20,7 +21,7 @@ class Pwm( ctypes.Structure ):
             ("ld_compare",  ctr_t),     #rw  loaded into compare on counter wrap
         ]
 
-class Regs( ctypes.Structure ):
+class ECap( ctypes.Structure ):
     _fields_ = [
             ("counter",     ctr_t),     #rw
             ("ld_counter",  ctr_t),     #rw  loaded into counter on sync-in if enabled
@@ -73,19 +74,12 @@ class Regs( ctypes.Structure ):
 	    # bit  26      rw  invert output (pwm mode)
 
 
-            ("irq_enabled", irq_t),     #rw
-            ("irq_pending", irq_t),     #r-
-            ("irq_clear",   irq_t),     #-c
-            ("irq_set",     irq_t),     #-s
-            #
-	    # bit   0      (pending) irq active / (clear) eoi
-	    #
+            ("irq",         EIrq),
 	    # bit   1      capture 0   (capture mode)
 	    # bit   2      capture 1   (capture mode)
 	    # bit   3      capture 2   (capture mode)
 	    # bit   4      capture 3   (capture mode)
-	    #
-	    # bit   5      counter overflow
+	    # bit   5      counter overflow  (capture mode)
 	    #
 	    # bit   6      maximum match   (pwm mode)
 	    # bit   7      compare match   (pwm mode)
@@ -97,12 +91,10 @@ class Regs( ctypes.Structure ):
             #   0x4_4d2_21_00  (v1.0.4 on subarctic 2.1)
         ]
 
-assert ctypes.sizeof(Regs) == 0x60
+    @property
+    def pwm( self ):
+        if not hasattr( self, '_pwm' ):
+            self._pwm = Pwm.from_buffer( self.capture )
+        return self._pwm
 
-
-class ECap( Uio ):
-    def __init__( self, *args, **kwds ):
-        super().__init__( *args, **kwds )
-
-        self.regs = self.map( Regs )
-        self.regs.pwm = self.map( Pwm, 8 )
+assert ctypes.sizeof(ECap) == 0x60
