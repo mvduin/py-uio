@@ -7,9 +7,6 @@ pruss.initialize()
 
 core = pruss.core0
 
-# clear iram (not really necessary)
-core.iram.write( bytearray(8192) )
-
 # load program
 with open('pruss-test-fw.bin', 'rb') as f:
     core.iram.write( f.read() )
