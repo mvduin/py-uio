@@ -7,6 +7,7 @@ from uio import Uio
 from .cfg import Cfg
 from .core import Core
 from .intc import Intc
+from ..ecap import ECap
 
 class Icss( Uio ):
     def __init__( self, path ):
@@ -38,7 +39,7 @@ class Icss( Uio ):
         # subsystem peripherals
         #self.uart = self.map( Uart, 0x28000 )
         #self.iep  = self.map( Iep,  0x2e000 )
-        #self.ecap = self.map( ECap, 0x30000 )
+        self.ecap  = self.map( ECap, 0x30000 )
 
         # instruction memories
         self.iram0 = self.subregion( 0x34000, 0x04000 )
