@@ -23,6 +23,8 @@ Now you can try out [pruss-test.py](pruss-test.py),
 
 ## uio_pdrv_genirq
 
+(TODO: this is outdated information and needs to be revised!)
+
 Copy the stuff in the [etc/](etc/) dir to the corresponding places in `/etc`
 and tweak the udev rule to taste (user/group/permissions).
 
