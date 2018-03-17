@@ -8,6 +8,7 @@ from .cfg import Cfg
 from .core import Core
 from .intc import Intc
 from ..ecap import ECap
+from struct import unpack_from as unpack
 
 class Icss( Uio ):
     def __init__( self, path ):
@@ -50,6 +51,8 @@ class Icss( Uio ):
         self.core0.iram = self.iram0
         self.core1.dram = self.dram1
         self.core1.iram = self.iram1
+        self.core0.peer_dram = self.dram1
+        self.core1.peer_dram = self.dram0
 
     def initialize( self ):
         # reset prcm controls to default just in case
@@ -66,3 +69,49 @@ class Icss( Uio ):
         # initialize interrupt controller
         self.cfg.intc = 0
         self.intc.initialize()
+
+
+    def elf_load( self, core, exe ):
+        # quick and dirty ELF executable loader
+
+        assert core in (self.core0, self.core1)
+
+        if not isinstance( exe, memoryview ):
+            exe = memoryview( exe )
+
+        # parse file header
+        if bytes( exe[:7] ) != b'\x7fELF\x01\x01\x01':
+            raise RuntimeError("Invalid ELF32 header")
+        if unpack( 'HH', exe, 0x10 ) != (2, 144):
+            raise RuntimeError("Not a TI-PRU executable")
+        (entry, phoff, phsz, nph) = unpack( 'II10xHH', exe, 0x18 )
+
+        core.full_reset( entry >> 2 )
+
+        for i in range(nph):
+            (pt, *args) = unpack( '8I', exe, phoff )
+            phoff += phsz
+
+            if pt == 1:
+                self._elf_load_segment( core, exe, *args )
+            elif pt == 0x70000000:
+                pass  # segment attributes
+            else:
+                raise RuntimeError("Unknown program header type: 0x%x" % pt)
+
+    def _elf_load_segment( self, core, exe, offset, va, pa, fsz, msz, flags, align ):
+            if flags & 1:
+                ram = core.iram
+            elif va < 0x2000:
+                ram = core.dram
+            elif va < 0x10000:
+                va -= 0x2000
+                ram = core.peer_dram
+            else:
+                va -= 0x10000
+                ram = self.dram2
+            ram = ram.map()
+            if va + msz > len(ram) or fsz > msz or offset + fsz > len(exe):
+                raise RuntimeError("Invalid segment")
+            ram[ va : va + fsz ] = exe[ offset : offset + fsz ]
+            ram[ va + fsz : va + msz ] = bytearray( msz - fsz )

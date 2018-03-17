@@ -1,0 +1,4 @@
+*.obj
+*.out.map
+*.out.xml
+*.asm
