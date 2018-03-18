@@ -74,13 +74,14 @@ class Icss( Uio ):
     def elf_load( self, core, exe ):
         # quick and dirty ELF executable loader
 
+        if not isinstance( exe, memoryview ):
+            with memoryview( exe ) as exe:
+                return self.elf_load( core, exe )
+
         assert core in (self.core0, self.core1)
 
-        if not isinstance( exe, memoryview ):
-            exe = memoryview( exe )
-
         # parse file header
-        if bytes( exe[:7] ) != b'\x7fELF\x01\x01\x01':
+        if exe[:7] != b'\x7fELF\x01\x01\x01':
             raise RuntimeError("Invalid ELF32 header")
         if unpack( 'HH', exe, 0x10 ) != (2, 144):
             raise RuntimeError("Not a TI-PRU executable")
