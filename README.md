@@ -19,7 +19,8 @@ allow the uio devices to be located easily.
 
 Now you can try out [pruss-test.py](pruss-test.py),
 [pruss-intc-test.py](pruss-intc-test.py), or
-[pruss-ddr-ping.py](pruss-ddr-ping.py).
+[pruss-ddr-ping.py](pruss-ddr-ping.py), or
+[pruss-elf-test.py](pruss-elf-test.py).
 
 ## uio_pdrv_genirq
 
