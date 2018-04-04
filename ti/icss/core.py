@@ -50,6 +50,7 @@
 ## In PRU-ICSS, the core control and debug register spaces are adjacent, hence
 ## they are viewed as one structure here.
 
+from uio import cached_getter
 import ctypes
 from ctypes import ( c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint )
 
@@ -253,14 +254,16 @@ class Core( ctypes.Structure ):
             control &= ~PROFILE
         self.control = control
 
+    @cached_getter
+    def _profiling( self ):
+        return ctypes.c_uint64.from_buffer( self, 0x0c )
+
     def profiling_sample( self ):
         # Sample cycles and stalls near-simultaneously (single 64-bit read).
         # It takes 3 pru cycles to sample each field, therefore you should add
         # 3 to cycles if you call this method while the counters are running to
         # compensate for the time passed before stalls was sampled.  Also keep
         # in mind that the counters are not accurately maintained when sleeping.
-        if not hasattr( self, '_profiling' ):
-            self._profiling = ctypes.c_uint64.from_buffer( self, 0x0c )
         x = self._profiling.value
         cycles = x & 0xffffffff
         stalls = x >> 32
