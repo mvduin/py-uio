@@ -57,24 +57,24 @@ class Cfg( ctypes.Structure ):
             # The two dividers for each direction are cascaded.
             # Non-integer divider results in asymmetric clock waveform.
             #
-            # 9/2               4 hi 5 lo
-            # 3/2, 3    5 hi 4 lo
-            # 3, 3/2    6 hi 3 lo
+            #   9/2         4 high 5 low
+            #   3/2, 3      5 high 4 low
+            #   3, 3/2      6 high 3 low
             #
-            # 15/2              7 high 8 low
-            #  5/2, 3   7 high 8 low
-            #  3/2, 5   8 high 7 low
-            #  3, 5/2   6 high 9 low
-            #  5, 3/2   10 high 5 low
+            #   15/2        7 high 8 low
+            #    5/2, 3     7 high 8 low
+            #    3/2, 5     8 high 7 low
+            #    3, 5/2     6 high 9 low
+            #    5, 3/2     10 high 5 low
             #
-            # 27/2              13 high 14 low
-            #  9/2, 3   13 high 14 low
-            #  3/2, 9   14 high 13 low
-            #  3, 9/2   12 high 15 low
-            #  9, 3/2   18 high 9 low
+            #   27/2        13 high 14 low
+            #    9/2, 3     13 high 14 low
+            #    3/2, 9     14 high 13 low
+            #    3, 9/2     12 high 15 low
+            #    9, 3/2     18 high 9 low
             #
-            #  5/2, 3/2 5 high 3 low 5 high 2 low
-            #  3/2, 5/2 3 high 4 low 3 high 5 low
+            #    5/2, 3/2   5 high 3 low 5 high 2 low
+            #    3/2, 5/2   3 high 4 low 3 high 5 low
 
 
             ("clockgate",    uint),
