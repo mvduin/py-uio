@@ -230,11 +230,17 @@ class cached_getter:
 
 def fix_ctypes_struct( cls ):
     instance = cls()
-    for name, typ in cls._fields_:
+    const_fields = []
+    if hasattr( cls, '_const_' ):
+        const_fields = cls._const_
+    for name, typ, *args in cls._fields_:
         if name == "":
             continue
         desc = cls.__dict__[ name ]
-        if not isinstance( desc.__get__( instance, cls ), typ ):
-            continue
+        if name not in const_fields:
+            if len(args) > 0:
+                continue
+            if not isinstance( desc.__get__( instance, cls ), typ ):
+                continue
         setattr( cls, name, cached_getter( desc, name ) )
     return cls
