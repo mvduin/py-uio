@@ -4,7 +4,6 @@ from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
 from .eirq import EIrq
 
 ctr_t = uint    # counter value
-irq_t = ushort
 
 class Pwm( ctypes.Structure ):
     # pwm mode:
