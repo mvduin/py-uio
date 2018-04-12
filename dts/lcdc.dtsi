@@ -1,0 +1,78 @@
+#include "subarctic/pinctrl.h"
+#include "bone/pins.h"
+
+// LCD controller
+
+// Functional clock frequency in Hz (max 252 MHz)
+#define LCDC_FCK 250000000
+
+&lcdc {
+	status = "okay";
+	compatible = "uio";
+	symlink = "uio/lcdc";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&lcdc_pins>;
+
+	// configure LCDC functional clock
+	assigned-clocks		= <&lcd_gclk>;
+	// there are three mux options:
+#if (LCDC_FCK == 250000000)
+	// use 250 MHz from core PLL
+	assigned-clock-parents	= <&dpll_core_m5_ck>;
+	assigned-clock-rates	= <0>;
+#elif (LCDC_FCK == 192000000)
+	// use 192 MHz from peripheral PLL
+	assigned-clock-parents	= <&dpll_per_m2_ck>;
+	assigned-clock-rates	= <0>;
+#else
+	// use custom frequency from display PLL
+	assigned-clock-parents	= <&dpll_disp_m2_ck>;
+	assigned-clock-rates	= <LCDC_FCK>;
+#endif
+};
+
+&am33xx_pinmux {
+	lcdc_pins: lcdc {
+		pinctrl-single,pins = <
+			// See 'LCDC' sheet of https://goo.gl/Jkcg0w for details
+
+			// These are always driven, hence no pull needed.
+			PIN_OUT_NOPULL(   P8_27, 0 )  // vsync / nALE / RS
+			PIN_OUT_NOPULL(   P8_29, 0 )  // hsync / RnW / nWS
+			PIN_OUT_NOPULL(   P8_28, 0 )  // pclk / EN / nRS
+			PIN_OUT_NOPULL(   P8_30, 0 )  // oe/acb / nCS0 / E0
+		//	PIN_OUT_NOPULL(   P8_18, 1 )  // mclk / nCS1 / E1
+
+			// d0-d15 have external pull (sysboot)
+			// Disable internal pulls to avoid risking conflict.
+			PIN_IO_NOPULL(    P8_45, 0 )  // d0
+			PIN_IO_NOPULL(    P8_46, 0 )  // d1
+			PIN_IO_NOPULL(    P8_43, 0 )  // d2
+			PIN_IO_NOPULL(    P8_44, 0 )  // d3
+			PIN_IO_NOPULL(    P8_41, 0 )  // d4
+			PIN_IO_NOPULL(    P8_42, 0 )  // d5
+			PIN_IO_NOPULL(    P8_39, 0 )  // d6
+			PIN_IO_NOPULL(    P8_40, 0 )  // d7
+			PIN_IO_NOPULL(    P8_37, 0 )  // d8
+			PIN_IO_NOPULL(    P8_38, 0 )  // d9
+			PIN_IO_NOPULL(    P8_36, 0 )  // d10
+			PIN_IO_NOPULL(    P8_34, 0 )  // d11
+			PIN_IO_NOPULL(    P8_35, 0 )  // d12
+			PIN_IO_NOPULL(    P8_33, 0 )  // d13
+			PIN_IO_NOPULL(    P8_31, 0 )  // d14
+			PIN_IO_NOPULL(    P8_32, 0 )  // d15
+
+			// Haven't checked whether d16-d23 are always driven, so
+			// keep the pulldown enabled to be safe.
+		//	PIN_OUT_PULLDOWN( P8_15, 1 )  // d16
+		//	PIN_OUT_PULLDOWN( P8_16, 1 )  // d17
+		//	PIN_OUT_PULLDOWN( P8_11, 1 )  // d18
+		//	PIN_OUT_PULLDOWN( P8_12, 1 )  // d19
+		//	PIN_OUT_PULLDOWN( P8_17, 1 )  // d20
+		//	PIN_OUT_PULLDOWN( P8_14, 1 )  // d21
+		//	PIN_OUT_PULLDOWN( P8_13, 1 )  // d22
+		//	PIN_OUT_PULLDOWN( P8_19, 1 )  // d23
+		>;
+	};
+};
