@@ -206,24 +206,26 @@ class Uio:
 
 function = type( lambda: () )
 
+from ctypes import c_uint8 as ubyte
+
 class cached_getter:
-    __slots__ = ('name', 'desc',)
+    __slots__ = ('__name__', 'desc',)
 
     def __init__( self, desc, name=None ):
         if name is None:
             name = desc.__name__
-        self.name = name
+        self.__name__ = name
         self.desc = desc
 
     def __get__( self, instance, owner ):
         if not isinstance( self.desc, function ):
             value = self.desc.__get__( instance, owner )
             if instance is not None:
-                instance.__dict__[ self.name ] = value
+                instance.__dict__[ self.__name__ ] = value
             return value
         elif instance is not None:
             value = self.desc( instance )
-            instance.__dict__[ self.name ] = value
+            instance.__dict__[ self.__name__ ] = value
             return value
         else:
             return self
@@ -233,14 +235,20 @@ def fix_ctypes_struct( cls ):
     const_fields = []
     if hasattr( cls, '_const_' ):
         const_fields = cls._const_
-    for name, typ, *args in cls._fields_:
+    for name, ctype, *args in cls._fields_:
         if name == "":
             continue
         desc = cls.__dict__[ name ]
         if name not in const_fields:
             if len(args) > 0:
                 continue
-            if not isinstance( desc.__get__( instance, cls ), typ ):
+            if not isinstance( desc.__get__( instance, cls ), ctype ):
                 continue
         setattr( cls, name, cached_getter( desc, name ) )
     return cls
+
+def struct_field( offset, ctype, name='field' ):
+    @fix_ctypes_struct
+    class Struct( ctypes.Structure ):
+        _fields_ = [ ("", ubyte * offset), (name, ctype) ]
+    return getattr( Struct, name )
