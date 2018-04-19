@@ -17,10 +17,11 @@ Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
 trigger -s uio`, or just reboot.  This creates symlinks (in `/dev/uio/`) to
 allow the uio devices to be located easily.
 
-Now you can try out [pruss-test.py](pruss-test.py),
-[pruss-intc-test.py](pruss-intc-test.py), or
-[pruss-ddr-ping.py](pruss-ddr-ping.py), or
-[pruss-elf-test.py](pruss-elf-test.py).
+Now you can try out the examples:
+ * [pruss-test.py](pruss-test.py) is a minimalistic example that initializes register R0 of a pru core to 123, loads and executes a [tiny pru program](pruss-test-fw.pasm) that increments R0, and then reads back and prints R0 (which should therefore print 124).
+ * [pruss-ddr-ping.py](pruss-ddr-ping.py) is a small test of using a shared DDR3 memory region.
+ * [pruss-elf-test.py](pruss-elf-test.py) demonstrates how to load an ELF executable produced by clpru.
+ * [pruss-intc-test.py](pruss-intc-test.py) is a more involved example that showcases sharing a data structure (in pruss local memory) between python code and the PRU cores, and sending events from both pru cores via the pruss interrupt controller to event handlers in python.
 
 ## uio_pdrv_genirq
 
