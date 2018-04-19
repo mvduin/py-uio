@@ -1,4 +1,6 @@
-.origin 0
+// vim: ft=asm
+
+#include "common.h"
 
 main:
 	lbbo	r0, r4, 0, 4

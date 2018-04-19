@@ -21,7 +21,7 @@ for event in EVENT0, EVENT1:
     intc.ev_enable_one( event )
 
 # load program onto both cores
-with open('pruss-intc-test-fw.bin', 'rb') as f:
+with open('pruss-fw/intc-test.bin', 'rb') as f:
     program = f.read()
     pruss.iram0.write( program )
     pruss.iram1.write( program )

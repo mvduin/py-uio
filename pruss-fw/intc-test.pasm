@@ -1,5 +1,6 @@
-.setcallreg r3.w2
-.origin 0
+// vim: ft=asm
+
+#include "common.h"
 
 #define arg r14
 
@@ -12,19 +13,23 @@
 .assign Params, r4, *, params
 
 
+	// load parameters from local ram
 	lbco	&params, c24, 0, SIZE(params)
 
 main_loop:
 	mov	arg, params.delay
 	call	delay
+
+	// send event
 	add	r31, params.event, 16
-	qba	main_loop
+
+	jmp	main_loop
 
 
 delay:
-	qbeq	delay_end, arg, 0
+	beq	delay_end, arg, 0
 delay_loop:
 	sub	arg, arg, 1
-	qbne	delay_loop, arg, 0
+	bne	delay_loop, arg, 0
 delay_end:
 	ret

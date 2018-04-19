@@ -9,7 +9,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load program
-with open('pruss-ping-fw.bin', 'rb') as f:
+with open('pruss-fw/ping.bin', 'rb') as f:
     core.iram.write( f.read() )
 
 # map and initialize ddr memory (two 32-bit ints)
