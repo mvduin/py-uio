@@ -22,6 +22,7 @@ Now you can try out the examples:
  * [pruss-ddr-ping.py](pruss-ddr-ping.py) is a small test of using a shared DDR3 memory region.
  * [pruss-elf-test.py](pruss-elf-test.py) demonstrates how to load an ELF executable produced by clpru.
  * [pruss-intc-test.py](pruss-intc-test.py) is a more involved example that showcases sharing a data structure (in pruss local memory) between python code and the PRU cores, and sending events from both pru cores via the pruss interrupt controller to event handlers in python.
+ * [pruss-intc-test-asyncio.py](pruss-intc-test-asyncio.py) is an [asyncio](https://docs.python.org/3/library/asyncio.html) version of the same example.
 
 ## uio_pdrv_genirq
 
