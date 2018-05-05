@@ -64,4 +64,7 @@ def irq_callback():
 loop.add_reader( irq.fileno(), irq_callback )
 intc.out_enable_one( IRQ )
 
-loop.run_forever()
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    pass

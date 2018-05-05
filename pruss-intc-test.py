@@ -53,10 +53,13 @@ def handle_events():
         intc.ev_clear_one( event )
         print( "event", event )
 
-while True:
-    # wait until any enabled event is pending
-    intc.out_enable_one( IRQ )
-    irq.irq_recv()
+try:
+    while True:
+        # wait until any enabled event is pending
+        intc.out_enable_one( IRQ )
+        irq.irq_recv()
 
-    # process events
-    handle_events()
+        # process events
+        handle_events()
+except KeyboardInterrupt:
+    pass
