@@ -38,6 +38,8 @@ def define( mask_t, stride=None ):
         @property
         def enabled( self ):  return self._enable
 
+        def enabled_one( self, irq ):  return bool( self._enable & 1 << irq )
+
         def enable( self, mask ):  self._enable = mask
         def disable( self, mask ):  self._disable = mask
 
