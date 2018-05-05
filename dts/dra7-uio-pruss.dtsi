@@ -1,0 +1,15 @@
+// uio-pruss for dra7/am57xx SoCs
+//
+// Include this file into the .dts (after dra7.dtsi)
+
+&pruss1 {
+	compatible = "ti,pruss-v2";
+	ti,pintc-offset = <0x20000>;
+	pruss-instance = "pruss1";
+};
+
+&pruss2 {
+	compatible = "ti,pruss-v2";
+	ti,pintc-offset = <0x20000>;
+	pruss-instance = "pruss2";
+};
