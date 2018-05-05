@@ -13,10 +13,10 @@
 .assign Params, r4, *, params
 
 
+main_loop:
 	// load parameters from local ram
 	lbco	&params, c24, 0, SIZE(params)
 
-main_loop:
 	mov	arg, params.delay
 	call	delay
 
