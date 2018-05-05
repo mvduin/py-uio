@@ -6,7 +6,7 @@
 
 
 .struct Params
-	.u32	delay
+	.u32	interval
 	.u8	event
 .ends
 
@@ -17,7 +17,7 @@ main_loop:
 	// load parameters from local ram
 	lbco	&params, c24, 0, SIZE(params)
 
-	mov	arg, params.delay
+	mov	arg, params.interval
 	call	delay
 
 	// send event

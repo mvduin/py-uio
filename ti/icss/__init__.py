@@ -33,6 +33,7 @@ class Icss( Uio ):
         # core control/debug
         self.core0 = self.map( Core, 0x22000 )
         self.core1 = self.map( Core, 0x24000 )
+        self.cores = ( self.core0, self.core1 )
 
         # subsystem configuration
         self.cfg   = self.map( Cfg,  0x26000 )
