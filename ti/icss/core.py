@@ -208,6 +208,13 @@ class Core( ctypes.Structure ):
             raise RuntimeError("PRU core failed to halt")
         return False
 
+    def reset( self, *, pc=None ):
+        if self.control & ( RUN | BUSY ):
+            raise RuntimeError("PRU core is not halted")
+        if pc != None:
+            self.reset_pc = pc
+        self.control = 0
+
     def run( self, *, pc=None, reset=None, single=False, profile=None ):
         control = self.control
         if control & ( RUN | BUSY ):
@@ -222,14 +229,18 @@ class Core( ctypes.Structure ):
         if pc != None:
             self.reset_pc = pc
 
-        control = nRESET | RUN
         if reset:
-            control &= nRESET
+            self.control = 0
+
+        control = nRESET | RUN
         if single:
             control |= SINGLE
         if profile:
             control |= PROFILE
         self.control = control
+
+    def step( self, **kwargs ):
+        self.run( single=True, **kwargs )
 
     @property
     def halted( self ):
