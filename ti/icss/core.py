@@ -279,3 +279,25 @@ class Core( ctypes.Structure ):
         cycles = x & 0xffffffff
         stalls = x >> 32
         return (cycles, stalls)
+
+def add_reg( i ):
+    def getter( self ):
+        return self.r[i]
+    def setter( self, value ):
+        self.r[i] = value
+    setattr( Core, "r%d" % i, property( getter, setter ) )
+
+def add_creg( i ):
+    def getter( self ):
+        return self.c[i]
+    def setter( self, value ):
+        raise RuntimeError("TODO")
+    setattr( Core, "c%d" % i, property( getter, setter ) )
+
+for i in range(32):
+    add_reg( i )
+    add_creg( i )
+
+del add_reg
+del add_creg
+del i
