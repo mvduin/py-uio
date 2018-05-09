@@ -12,12 +12,12 @@ pruss.initialize()
 
 core = pruss.core0
 
-# load program
+# load ELF executable
 with open('fw-c/test.out', 'rb') as f:
-    pruss.elf_load( core, f.read() )
+    core.elf_load( f.read() )
 
 # map shared memory
-shmem = pruss.dram2.map( c_uint32 )
+shmem = core.shared_dram.map( c_uint32 )
 
 print( shmem.value )
 
