@@ -23,9 +23,9 @@ class Icss( Uio ):
                 self.ddr = None
 
         # data memories
-        self.dram0 = self.subregion( 0x00000, 0x02000 )
-        self.dram1 = self.subregion( 0x02000, 0x02000 )
-        self.dram2 = self.subregion( 0x10000, 0x10000 )
+        self.dram0 = self.subregion( 0x00000, 0x02000, name='dram0' )
+        self.dram1 = self.subregion( 0x02000, 0x02000, name='dram1' )
+        self.dram2 = self.subregion( 0x10000, 0x10000, name='dram2' )
 
         # interrupt controller
         self.intc  = self.map( Intc, 0x20000 )
@@ -44,16 +44,34 @@ class Icss( Uio ):
         self.ecap  = self.map( ECap, 0x30000 )
 
         # instruction memories
-        self.iram0 = self.subregion( 0x34000, 0x04000 )
-        self.iram1 = self.subregion( 0x38000, 0x04000 )
+        self.iram0 = self.subregion( 0x34000, 0x04000, name='iram0' )
+        self.iram1 = self.subregion( 0x38000, 0x04000, name='iram1' )
 
-        # make it easier to find everything related to one core
-        self.core0.dram = self.dram0
-        self.core0.iram = self.iram0
-        self.core1.dram = self.dram1
-        self.core1.iram = self.iram1
-        self.core0.peer_dram = self.dram1
-        self.core1.peer_dram = self.dram0
+        self._link_memories()
+
+    def _link_memories( self ):
+        self.core0.iram         = self.iram0
+        self.core0.dram         = self.dram0
+        self.core0.peer_dram    = self.dram1
+        self.core0.shared_dram  = self.dram2
+        self.core1.iram         = self.iram1
+        self.core1.dram         = self.dram1
+        self.core1.peer_dram    = self.dram0
+        self.core1.shared_dram  = self.dram2
+
+    def _autodetect_ram( self, name ):
+        ram = getattr( self, name )
+        pages = ram.size // 4096
+        mm = ram.map().cast( 'I', shape=(pages, 4096//4) )
+        for i in reversed( range( pages ) ):
+            mm[i, 0] = i
+        for i in range( pages ):
+            if mm[i, 0] != i:
+                pages = i
+                break
+        offset = ram.address - self.region().address
+        ram = self.subregion( offset, pages * 4096, name=name )
+        setattr( self, name, ram )
 
     def initialize( self ):
         # reset prcm controls to default just in case
@@ -66,6 +84,11 @@ class Icss( Uio ):
         # initialize cores
         self.core0.full_reset()
         self.core1.full_reset()
+
+        # auto-detect ram sizes
+        for name in 'iram0', 'iram1', 'dram0', 'dram1', 'dram2':
+            self._autodetect_ram( name )
+        self._link_memories()
 
         # initialize interrupt controller
         self.cfg.intc = 0
