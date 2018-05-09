@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.insert( 0, '../src' )
+
 from ti.icss import Icss
 from ctypes import c_uint32
 
@@ -9,7 +12,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load program
-with open('pruss-fw/ping.bin', 'rb') as f:
+with open('fw/ping.bin', 'rb') as f:
     core.iram.write( f.read() )
 
 # map and initialize ddr memory (two 32-bit ints)

@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.insert( 0, '../src' )
+
 from ti.icss import Icss
 from uio import Uio
 import ctypes
@@ -22,7 +25,7 @@ for event in EVENT0, EVENT1:
     intc.ev_enable_one( event )
 
 # load program onto both cores
-with open('pruss-fw/intc-test.bin', 'rb') as f:
+with open('fw/intc-test.bin', 'rb') as f:
     program = f.read()
     core0.iram.write( program )
     core1.iram.write( program )

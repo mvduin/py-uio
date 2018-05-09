@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.insert( 0, '../src' )
+
 from ti.icss import Icss
 
 pruss = Icss( "/dev/uio/pruss/module" )
@@ -8,7 +11,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load program
-with open('pruss-fw/test.bin', 'rb') as f:
+with open('fw/test.bin', 'rb') as f:
     core.iram.write( f.read() )
 
 # alternatively you can access iram as an array of instructions:

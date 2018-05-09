@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.insert( 0, '../src' )
+
 from ti.pwmss import Pwmss
 
 cap = Pwmss( "/dev/uio/pwmss2" ).cap

@@ -16,6 +16,7 @@ class Cfg( ctypes.Structure ):
             # 4'700'00'00   subarctic 2.1
             # 4'700'02'00   aegis pruss1 (according to TRM)
             # 4'701'01'00   aegis pruss0 (according to TRM)
+            # 4'700'02'01   am572x 2.0 (both instances)
 
 
             # sysconfig

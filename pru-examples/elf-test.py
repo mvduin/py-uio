@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.insert( 0, '../src' )
+
 from ti.icss import Icss
 from ctypes import c_uint32
 import struct
@@ -10,7 +13,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load program
-with open('pruss-elf-test-fw/test.out', 'rb') as f:
+with open('fw-c/test.out', 'rb') as f:
     pruss.elf_load( core, f.read() )
 
 # map shared memory

@@ -1,11 +1,17 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.insert( 0, '../src' )
+
+import asyncio
 from uio import Uio
 
-pin = Uio( "/dev/uio/gpio-irq" )
+loop = asyncio.get_event_loop()
+
+pin = Uio( "/dev/uio/gpio-irq", blocking=False )
 pin.irq_enable()
 
-while True:
+def irq_callback():
     pin.irq_recv()
     print( "Ping!" )
 
@@ -13,3 +19,7 @@ while True:
     # ensure that it is no longer asserted before reenabling it, otherwise
     # it will just immediately trigger again.
     pin.irq_enable()
+
+loop.add_reader( pin.fileno(), irq_callback )
+
+loop.run_forever()
