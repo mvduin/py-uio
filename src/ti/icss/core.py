@@ -110,6 +110,70 @@ class State( int ):
         return s
 
 
+class CRegs:
+    def __init__( self, core ):
+        self.core   = core
+        self._const = None
+        self.initialize()
+
+    def initialize( self, required=False ):
+        if self._const:
+            return
+        if not self.core.halted:
+            if not required:
+                return
+            raise RuntimeError( "cannot read cregs, core is not halted" )
+        self._const = self.core._c[:]
+        for i in range( 24, 28 ):
+            self._const[ i ] &= 0xfffff000
+        for i in range( 28, 32 ):
+            self._const[ i ] &= 0xff000000
+        self._const = tuple( self._const )
+
+    def __len__( self ):
+        return 32
+
+    def __iter__( self ):
+        return iter( self[:] )
+
+    def _get( self, index ):
+        value = self._const[ index ]
+        if index >= 24:
+            value |= self.core._page[ index - 24 ] << 8
+        return value
+
+    def __getitem__( self, index ):
+        self.initialize( True )
+        index = range(32)[ index ]
+        if type( index ) is int:
+            return self._get( index )
+        return [ self._get( i ) for i in index ]
+
+    def __setitem__( self, index, value ):
+        self.initialize( True )
+        index = range(32)[ index ]
+        if type( index ) is int:
+            index = [ index ]
+            value = [ value ]
+        else:
+            index = list( index )
+            value = list( value )
+        if len( index ) != len( value ):
+            raise ValueError( "cannot insert or delete cregs" )
+        for i, v in zip( index, value ):
+            if v not in range( 0x100000000 ):
+                raise ValueError( "not an uint32: %r" % v )
+            diff = v ^ self._const[ i ]
+            if i >= 28:
+                diff &= ~(0xffff << 8)
+            elif i >= 24:
+                diff &= ~(0xf << 8)
+            if diff:
+                raise ValueError( "cannot set c%d to 0x%x" % (i, v) )
+        for i, v in zip( index, value ):
+            if i >= 24:
+                self.core._page[ i - 24 ] = v >> 8
+
 class Core( ctypes.Structure ):
     _fields_ = [
             ("control",     ushort),  #rw
@@ -167,18 +231,24 @@ class Core( ctypes.Structure ):
             ("",            ubyte * (0x20 - 0x14)),
 
 
-            ("blk",         ushort * 4),  #rw
-            ("ptr",         ushort * 4),  #rw
-            # blk[i] programs bits 8-11 of register c[24+i]
-            # ptr[i] programs bits 8-23 of register c[28+i]
+            ("_page",       ushort * 8),  #rw
+            # page[i] programs bits 8-23 of register c[24+i]
+            # (for c24..c27, only bits 8-11 can be modified)
 
             ("",            ubyte * (0x400 - 0x30)),
 
 
             ("r",           uint * 32),  #rw
-            ("c",           uint * 32),  #r-
+            ("_c",          uint * 32),  #r-
             # Debug access to core registers (only allowed when core is halted)
         ]
+
+    @cached_getter
+    def c( self ):
+        return CRegs( self )
+
+    def cache_initialize( self ):
+        self.c.initialize()
 
     def full_reset( self, pc=0 ):
         self.halt()
@@ -186,13 +256,13 @@ class Core( ctypes.Structure ):
         self.control = 0
         assert( ( self.control & ( CONTROL_MASK | BUSY ) ) == nRESET )
         self.wake_en = 0
-        self.blk[:] = (0,) * 4
-        self.ptr[:] = (0,) * 4
+        self._page[:] = (0,) * 8
         self.r[:] = (0,) * 32
 
     def halt( self, *, wakeup=True, check=None ):
         control = self.control
         if not ( control & ( RUN | BUSY ) ):
+            self.cache_initialize()
             return True
         if wakeup:
             control &= ~SLEEP
@@ -202,6 +272,7 @@ class Core( ctypes.Structure ):
 
         for i in range(10):
             if self.halted:
+                self.cache_initialize()
                 return True
         if check == None:
             check = wakeup
@@ -338,7 +409,7 @@ def add_creg( i ):
     def getter( self ):
         return self.c[i]
     def setter( self, value ):
-        raise RuntimeError("TODO")
+        self.c[i] = value
     setattr( Core, "c%d" % i, property( getter, setter ) )
 
 for i in range(32):
