@@ -26,7 +26,7 @@ with open('fw/test.bin', 'rb') as f:
 #       iram[1] = 0x2a000000  # halt
 
 
-core.r[0] = 123
+core.r0 = 123
 
 core.run()
 
@@ -34,4 +34,4 @@ print( "waiting for core to halt" )
 while not core.halted:
     pass
 
-print( "r0 =", core.r[0] )
+print( "r0 =", core.r0 )

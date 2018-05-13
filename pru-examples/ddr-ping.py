@@ -20,7 +20,7 @@ shmem = pruss.ddr.map( c_uint32 * 2 )
 shmem[:] = (0, 0)
 
 # run pru program that copies from shmem[0] to shmem[1]
-core.r[4] = pruss.ddr.address
+core.r4 = pruss.ddr.address
 core.run()
 
 for i in range( 1, 4 ):
