@@ -12,8 +12,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load program
-with open('fw/ping.bin', 'rb') as f:
-    core.iram.write( f.read() )
+core.load( 'fw/ping.bin' )
 
 # map and initialize ddr memory (two 32-bit ints)
 shmem = pruss.ddr.map( c_uint32 * 2 )

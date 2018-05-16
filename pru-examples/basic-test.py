@@ -11,8 +11,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load program
-with open('fw/test.bin', 'rb') as f:
-    core.iram.write( f.read() )
+core.load( 'fw/test.bin' )
 
 # alternatively you can access iram as an array of instructions:
 #

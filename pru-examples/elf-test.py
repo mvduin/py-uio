@@ -13,8 +13,7 @@ pruss.initialize()
 core = pruss.core0
 
 # load ELF executable
-with open('fw-c/test.out', 'rb') as f:
-    core.elf_load( f.read() )
+core.load( 'fw-c/test.out' )
 
 # map shared memory
 shmem = core.shared_dram.map( c_uint32 )

@@ -54,6 +54,7 @@ from uio import cached_getter
 import ctypes
 from ctypes import ( c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint )
 from struct import unpack_from as unpack
+from .program import Program
 
 nRESET  = 1 <<  0
 RUN     = 1 <<  1
@@ -353,49 +354,15 @@ class Core( ctypes.Structure ):
         return (cycles, stalls)
 
 
-    def elf_load( self, exe ):
-        # quick and dirty ELF executable loader
+    def load( self, program ):
+        # program is Program object or file path
+        if not isinstance( program, Program ):
+            program = Program.load( program )
 
-        if not isinstance( exe, memoryview ):
-            with memoryview( exe ) as m:
-                return self.elf_load( m )
+        self.full_reset( program.entrypoint )
 
-        # parse file header
-        if exe[:7] != b'\x7fELF\x01\x01\x01':
-            raise RuntimeError("Invalid ELF32 header")
-        if unpack( 'HH', exe, 0x10 ) != (2, 144):
-            raise RuntimeError("Not a TI-PRU executable")
-        (entry, phoff, phsz, nph) = unpack( 'II10xHH', exe, 0x18 )
-
-        self.full_reset( entry >> 2 )
-
-        for i in range(nph):
-            (pt, *args) = unpack( '8I', exe, phoff )
-            phoff += phsz
-
-            if pt == 1:
-                self._elf_load_segment( exe, *args )
-            elif pt == 0x70000000:
-                pass  # segment attributes
-            else:
-                raise RuntimeError("Unknown program header type: 0x%x" % pt)
-
-    def _elf_load_segment( self, exe, offset, va, pa, fsz, msz, flags, align ):
-            if flags & 1:
-                ram = self.iram
-            elif va < 0x2000:
-                ram = self.dram
-            elif va < 0x10000:
-                va -= 0x2000
-                ram = self.peer_dram
-            else:
-                va -= 0x10000
-                ram = self.shared_dram
-            mm = ram.map()
-            if va + msz > len(mm) or fsz > msz or offset + fsz > len(exe):
-                raise RuntimeError("Invalid segment")
-            mm[ va : va + fsz ] = exe[ offset : offset + fsz ]
-            mm[ va + fsz : va + msz ] = bytearray( msz - fsz )
+        for mem in program.memories:
+            mem.write_into( getattr( self, mem.name ) )
 
 
 def add_reg( i ):
