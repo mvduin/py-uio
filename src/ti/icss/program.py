@@ -1,6 +1,7 @@
 from struct import unpack_from as unpack
 from pathlib import Path
 from warnings import warn
+from array import array
 
 class Segment:
     def __init__( self, data, start ):
@@ -70,11 +71,35 @@ memories = [
         ( 'shared_dram', 0x10000, 0x10000, False ),
     ]
 
+class SourceFile:
+    def __init__( self, path ):
+        self.path = path
+
+    def __str__( self ):
+        return str( self.path )
+
+class Instruction:
+    def __init__( self, index, opcode, srcfile, line ):
+        self.index = index
+        self.opcode = opcode
+        self.file = srcfile
+        self.line = line
+
+    @property
+    def address( self ):
+        return self.index << 2
+
 class Program:
     def __init__( self ):
         self.path = None
         self.entrypoint = None
         self.memories = [ Memory( *meminfo ) for meminfo in memories ]
+        self.labels = {}
+        self.dbginfo = None
+
+    @property
+    def code( self ):
+        return self.memories[ 0 ]
 
     def add_segment( self, data, address, is_code=False ):
         for mem in reversed( self.memories ):
@@ -93,6 +118,8 @@ class Program:
             # ELF magic is not a valid pru instruction (in little endian)
             if exe[:4] == b'\x7fELF':
                 filetype = 'elf'
+            elif path.suffix == '.dbg':
+                filetype = 'dbg'
             else:
                 filetype = 'bin'
 
@@ -104,6 +131,8 @@ class Program:
             program._load_elf( exe )
         elif filetype == 'bin':
             program._load_bin( exe )
+        elif filetype == 'dbg':
+            program._load_dbg( exe )
         else:
             raise ValueError( "Unknown filetype: %r" % filetype )
 
@@ -113,17 +142,39 @@ class Program:
         if self.entrypoint is None:
             self.entrypoint = 0
 
-        self.add_segment( exe, 0, is_code=True )
+        self.code.add( exe, 0 )
 
-        # try to load debug information
-        path = self.path.with_suffix( '.dbg' )
-        try:
-            with open( path, 'rb' ) as f:
-                dbg = f.read()
-        except FileNotFoundError:
-            return
+    def _load_dbg( self, dbg ):
+        ( magic, n_label, label_off, n_file, file_off, n_instr, instr_off,
+                self.entrypoint, flags ) = unpack( '9I', dbg, 0 )
+        if magic != 0x10150003:
+            raise RuntimeError( "Invalid debug info" )
 
-        # TODO parse debug data
+        for i in range( n_label ):
+            ( addr, name ) = unpack( 'I 64s', dbg, label_off )
+            label_off += 4 + 64
+            name = name.decode( 'ascii' ).rstrip( "\x00" )
+            self.labels[ name ] = addr
+
+        files = []
+        for i in range( n_file ):
+            name = dbg[ file_off : file_off + 64 ]
+            file_off += 64
+            name = name.decode( 'ascii' ).rstrip( "\x00" )
+            files.append( SourceFile( self.path.parent / name ) )
+
+        dbginfo = []
+        for i in range( n_instr ):
+            ( flags, fileindex, line, addr, opcode ) = unpack( 'HHIII', dbg, instr_off )
+            instr_off += 16
+            if addr != i:
+                raise RuntimeError( "Unexpected code address" )
+            instr = Instruction( i, opcode, files[ fileindex ], line )
+            dbginfo.append( instr )
+        self.dbginfo = dbginfo
+
+        exe = array( 'I', ( instr.opcode for instr in dbginfo ) )
+        self.code.add( exe, 0 )
 
 
     def _load_elf( self, exe ):
