@@ -3,7 +3,7 @@
 import sys
 sys.path.insert( 0, '../src' )
 
-from ti.icss import Icss, Program
+from ti.icss import Icss
 from uio import Uio
 import ctypes
 import asyncio
@@ -28,9 +28,8 @@ for event in EVENT0, EVENT1:
     intc.ev_enable_one( event )
 
 # load program onto both cores
-program = Program.load( 'fw/intc-test.bin' )
-core0.load( program )
-core1.load( program )
+core0.load( 'fw/intc-test.bin' )
+core1.load( 'fw/intc-test.bin' )
 
 # map and set parameters
 class Params( ctypes.Structure ):

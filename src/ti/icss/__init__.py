@@ -8,7 +8,6 @@ from .cfg import Cfg
 from .core import Core
 from .intc import Intc
 from ..ecap import ECap
-from .program import Program
 
 class Icss( Uio ):
     def __init__( self, path ):
