@@ -15,3 +15,16 @@
 #define bne qbne
 #define bbs qbbs
 #define bbc qbbc
+
+// Generalize the "wait until" macros
+#define weq bne 0,
+#define wne beq 0,
+#define wlt bge 0,
+#define wgt ble 0,
+#define wle bgt 0,
+#define wge blt 0,
+
+// General utility
+.macro nop
+	mov r0.b0, r0.b0
+.endm
