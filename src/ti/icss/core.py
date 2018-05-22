@@ -281,19 +281,25 @@ class Core( ctypes.Structure ):
             raise RuntimeError("PRU core failed to halt")
         return False
 
-    def reset( self, *, pc=None ):
-        if self.control & ( RUN | BUSY ):
-            raise RuntimeError("PRU core is not halted")
-        if pc != None:
-            self.reset_pc = pc
-        self.control = 0
-
-    def run( self, *, pc=None, reset=None, single=False, profile=None ):
+    def reset( self, *, pc=None, profiling=None ):
         control = self.control
         if control & ( RUN | BUSY ):
             raise RuntimeError("PRU core is not halted")
-        if profile == None:
-            profile = bool( control & PROFILE )
+        if profiling == None:
+            profiling = bool( control & PROFILE )
+        if pc != None:
+            self.reset_pc = pc
+        control = 0
+        if profiling:
+            control |= PROFILE
+        self.control = control
+
+    def run( self, *, pc=None, reset=None, single=False, profiling=None ):
+        control = self.control
+        if control & ( RUN | BUSY ):
+            raise RuntimeError("PRU core is not halted")
+        if profiling == None:
+            profiling = bool( control & PROFILE )
         if reset == None:
             reset = pc != None
         if pc != None and pc != self.pc and not reset:
@@ -308,7 +314,7 @@ class Core( ctypes.Structure ):
         control = nRESET | RUN
         if single:
             control |= SINGLE
-        if profile:
+        if profiling:
             control |= PROFILE
         self.control = control
 
@@ -339,7 +345,7 @@ class Core( ctypes.Structure ):
         self.control = control
 
     @cached_getter
-    def _profiling( self ):
+    def _profiling_sample( self ):
         return ctypes.c_uint64.from_buffer( self, 0x0c )
 
     def profiling_sample( self ):
@@ -348,7 +354,7 @@ class Core( ctypes.Structure ):
         # 3 to cycles if you call this method while the counters are running to
         # compensate for the time passed before stalls was sampled.  Also keep
         # in mind that the counters are not accurately maintained when sleeping.
-        x = self._profiling.value
+        x = self._profiling_sample.value
         cycles = x & 0xffffffff
         stalls = x >> 32
         return (cycles, stalls)
