@@ -31,7 +31,6 @@ for core in pruss.cores:
     core.wake_en = 1 << ( 30 + IRQ )
 
 iterations = 1000
-overhead = 3
 
 def prepare( core, pc, addr, length ):
     assert addr in range( 2**32 )
@@ -69,8 +68,8 @@ while not ( core0.halted and core1.halted ):
 
 for core in pruss.cores:
     ( cycles, instrs ) = core.profiling_sample()
-    instrs -= overhead
-    cycles -= overhead + 1
+    instrs -= 3  # jmp, slp 1, loop
+    cycles -= 4  # slp 1 is counted as two cycles
     if instrs <= 0:
         continue
     if instrs % iterations:
