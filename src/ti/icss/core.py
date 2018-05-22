@@ -344,20 +344,26 @@ class Core( ctypes.Structure ):
             control &= ~PROFILE
         self.control = control
 
+    @property
+    def profiling_running( self ):
+        return not ( ~self.control & ( BUSY | PROFILE ) )
+
     @cached_getter
     def _profiling_sample( self ):
         return ctypes.c_uint64.from_buffer( self, 0x0c )
 
-    def profiling_sample( self ):
-        # Sample cycles and stalls near-simultaneously (single 64-bit read).
-        # It takes 3 pru cycles to sample each field, therefore you should add
-        # 3 to cycles if you call this method while the counters are running to
-        # compensate for the time passed before stalls was sampled.  Also keep
-        # in mind that the counters are not accurately maintained when sleeping.
+    def profiling_sample( self, running=None ):
+        if running is None:
+            # determine whether counters are running
+            running = self.profiling_running
         x = self._profiling_sample.value
         cycles = x & 0xffffffff
         stalls = x >> 32
-        return (cycles, stalls)
+        if running:
+            # compensate for time passed between reading cycles and stalls
+            cycles += 3
+        instrs = cycles - stalls
+        return ( cycles, instrs )
 
 
     def load( self, program ):
