@@ -111,7 +111,7 @@ class Program:
     def load( path, filetype=None, *, entrypoint=None ):
         path = Path( path )
 
-        with open( path, 'rb' ) as f:
+        with path.open( 'rb' ) as f:
             exe = f.read()
 
         if filetype is None: # auto detect filetype
