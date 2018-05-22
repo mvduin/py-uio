@@ -29,6 +29,7 @@ def start():
 for core in pruss.cores:
     core.load( 'fw/memspam.bin' )
     core.wake_en = 1 << ( 30 + IRQ )
+del core
 
 iterations = 1000
 
