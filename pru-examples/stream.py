@@ -54,7 +54,7 @@ core.r4 = pruss.ddr.address
 core.r5 = BUFLEN
 pru.wptr = wptr
 arm.rptr = rptr
-arm.delay = 2000
+arm.delay = 4000
 
 # to check message ids increment monotically
 nextid = 1
