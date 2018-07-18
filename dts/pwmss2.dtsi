@@ -34,13 +34,13 @@
 &epwmss2 {
 	status = "okay";
 	compatible = "simple-pm-bus", "ti,am33xx-pwmss";
-	ranges = <0 0x48304000 0x1000>;
+	ranges = <0x48304000 0x48304000 0x1000>;
 
 	// The individual submodules are smaller than a page (in fact the
 	// pwmss subsystem occupies only a single 4K page), so make an uio
 	// device for the whole address range.
 	module {
-		reg = <0 0x1000>;
+		reg = <0x48304000 0x1000>;
 		compatible = "uio";
 		symlink = "uio/pwmss2/module";
 	};
@@ -57,7 +57,7 @@
 };
 
 &ecap2 {
-	reg = <0x100 0x80>;
+	reg = <0x48304100 0x80>;
 
 	interrupt-parent = <&intc>;
 	interrupts = <61>;
@@ -70,7 +70,7 @@
 };
 
 &eqep2 {
-	reg = <0x180 0x80>;
+	reg = <0x48304180 0x80>;
 
 	interrupt-parent = <&intc>;
 	interrupts = <89>;
@@ -81,7 +81,7 @@
 };
 
 &ehrpwm2 {
-	reg = <0x200 0x80>, <0x280 0x80>;
+	reg = <0x48304200 0x80>, <0x48304280 0x80>;
 	reg-names = "pwm", "hr";
 
 	interrupt-parent = <&intc>;
