@@ -18,18 +18,9 @@ main_loop:
 	lbco	&params, c24, 0, SIZE(params)
 
 	mov	arg, params.interval
-	call	delay
+	delay	arg
 
 	// send event
 	add	r31, params.event, 16
 
 	jmp	main_loop
-
-
-delay:
-	beq	delay_end, arg, 0
-delay_loop:
-	sub	arg, arg, 1
-	bne	delay_loop, arg, 0
-delay_end:
-	ret
