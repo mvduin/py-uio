@@ -1,6 +1,18 @@
 #include "subarctic/pinctrl.h"
 #include "bone/pins.h"
 
+// disable cape-universal pinmux helper nodes for pins used by this overlay
+&ocp {
+	P9_28_pinmux {  status = "disabled";  };  // cap 2
+	P8_12_pinmux {  status = "disabled";  };  // qep 2 A
+	P8_11_pinmux {  status = "disabled";  };  // qep 2 B
+	P8_16_pinmux {  status = "disabled";  };  // qep 2 index
+	P8_15_pinmux {  status = "disabled";  };  // qep 2 strobe
+	P8_19_pinmux {  status = "disabled";  };  // pwm 2 A
+	P8_13_pinmux {  status = "disabled";  };  // pwm 2 B
+	P8_14_pinmux {  status = "disabled";  };  // pwm tripzone 2
+};
+
 &am33xx_pinmux {
 	cap2_pins: cap2 {
 		pinctrl-single,pins = <
