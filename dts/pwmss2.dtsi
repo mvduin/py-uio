@@ -8,9 +8,11 @@
 	P8_11_pinmux {  status = "disabled";  };  // qep 2 B
 	P8_16_pinmux {  status = "disabled";  };  // qep 2 index
 	P8_15_pinmux {  status = "disabled";  };  // qep 2 strobe
+#if 0
 	P8_19_pinmux {  status = "disabled";  };  // pwm 2 A
 	P8_13_pinmux {  status = "disabled";  };  // pwm 2 B
 	P8_14_pinmux {  status = "disabled";  };  // pwm tripzone 2
+#endif
 };
 
 &am33xx_pinmux {
@@ -29,6 +31,7 @@
 		>;
 	};
 
+#if 0
 	pwm2_pins: pwm2 {
 		pinctrl-single,pins = <
 			PIN_OUT_PULLDOWN( P8_19, 4 )  // pwm 2 A
@@ -41,6 +44,7 @@
 			PIN_IN_PULLDOWN( P8_14, 4 )  // pwm tripzone 2
 		>;
 	};
+#endif
 };
 
 &epwmss2 {
@@ -59,6 +63,7 @@
 
 	// see below for child nodes &ecap2, &eqep2, &ehrpwm2
 
+#if 0
 	// add device for pwm tripzone irq
 	pwm-tz {
 		interrupt-parent = <&intc>;
@@ -66,6 +71,7 @@
 		compatible = "uio";
 		symlink = "uio/pwmss2/pwm-tz";
 	};
+#endif
 };
 
 &ecap2 {
@@ -92,6 +98,7 @@
 	status = "okay";
 };
 
+#if 0
 &ehrpwm2 {
 	reg = <0x48304200 0x80>, <0x48304280 0x80>;
 	reg-names = "pwm", "hr";
@@ -106,3 +113,4 @@
 	symlink = "uio/pwmss2/pwm";
 	status = "okay";
 };
+#endif
