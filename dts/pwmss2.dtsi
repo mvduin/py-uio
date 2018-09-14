@@ -39,7 +39,7 @@
 		>;
 	};
 
-	pwm_tz_pins: pwm-tz {
+	pwm2_tz_pins: pwm2-tz {
 		pinctrl-single,pins = <
 			PIN_IN_PULLDOWN( P8_14, 4 )  // pwm tripzone 2
 		>;
@@ -70,6 +70,9 @@
 		interrupts = <60>;
 		compatible = "uio";
 		symlink = "uio/pwmss2/pwm-tz";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&pwm2_tz_pins>;
 	};
 #endif
 };
@@ -85,6 +88,9 @@
 	compatible = "uio";
 	symlink = "uio/pwmss2/cap";
 	status = "okay";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&cap2_pins>;
 };
 
 &eqep2 {
@@ -96,6 +102,9 @@
 	compatible = "uio";
 	symlink = "uio/pwmss2/qep";
 	status = "okay";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&qep2_pins>;
 };
 
 #if 0
@@ -112,5 +121,8 @@
 	compatible = "uio";
 	symlink = "uio/pwmss2/pwm";
 	status = "okay";
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm2_pins>;
 };
 #endif
