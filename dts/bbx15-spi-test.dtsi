@@ -1,6 +1,6 @@
-#include "dra7-uio-pruss.dtsi"
-
 // BeagleBoard-X15 spi test
+//
+// Include this into your .dts (after dra7.dtsi).
 //
 // Note that letting the kernel setup pinmux (based on devicetree) may glitch the I/Os.
 //
@@ -16,6 +16,8 @@
 //	P17.36 <-- P17.37
 //
 // Then run spi-test.py in the pru-examples directory.
+
+#include "dra7-uio-pruss.dtsi"
 
 &dra7_pmx_core {
 	mcspi3_pins: mcspi3 {

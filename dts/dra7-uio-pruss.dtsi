@@ -1,6 +1,6 @@
 // uio-pruss for dra7/am57xx SoCs
 //
-// Include this file into the .dts (after dra7.dtsi)
+// Include this into your .dts (after dra7.dtsi).
 
 &pruss1 {
 	compatible = "ti,pruss-v2";

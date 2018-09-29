@@ -6,7 +6,12 @@ CPPFLAGS += -D__DTS__
 CPPFLAGS += -I include
 DTC = dtc
 
-all :: $(patsubst %.dtsi,%.dtbo,$(wildcard *.dtsi))
+overlays := $(patsubst %.dtsi,%.dtbo,$(wildcard *.dtsi))
+
+# beagleboard-x15 doesn't use overlays
+overlays := $(filter-out dra7-% bbx15-%,${overlays})
+
+all :: ${overlays}
 
 clean ::
 	${RM} *.dtbo
