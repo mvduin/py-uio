@@ -1,21 +1,41 @@
-""" mem_write.py - test script for writing to PRU 0 mem using PyPRUSS library """
+#!/usr/bin/python3
+""" mem_write.py - test script for writing to PRU 0 mem using PyUIO library """
+from pyuio.ti.icss import Icss
+from pyuio.uio import Uio
+from ctypes import c_uint32
 
-import pypruss                              # The Programmable Realtime Unit Library
-import numpy as np                          # Needed for braiding the pins with the delays
 
-steps = [(7 << 22), 0] * 10                 # 10 blinks, this control the GPIO1 pins
-delays = [0xFFFFFF] * 20                    # number of delays. Each delay adds 2 instructions, so ~10ns
+IRQ = 2     # range 2 .. 9
+EVENT0 = 19 # range 16 .. 31
 
-data = np.array([steps, delays])            # Make a 2D matrix combining the ticks and delays
-data = data.transpose().flatten()           # Braid the data so every other item is a
-data = [20] + list(data)                    # Make the data into a list and add the number of ticks total
+pruss = Icss("/dev/uio/pruss/module")
+irq = Uio( "/dev/uio/pruss/irq%d" % IRQ )
 
-pypruss.modprobe()                          # This only has to be called once pr boot
-pypruss.init()                              # Init the PRU
-pypruss.open(0)                             # Open PRU event 0 which is PRU0_ARM_INTERRUPT
-pypruss.pruintc_init()                      # Init the interrupt controller
-pypruss.pru_write_memory(0, 0, data)        # Load the data in the PRU ram
-pypruss.exec_program(0, "./mem_write.bin")  # Load firmware "mem_write.bin" on PRU 0
-pypruss.wait_for_event(0)                   # Wait for event 0 which is connected to PRU0_ARM_INTERRUPT
-pypruss.clear_event(0, pypruss.PRU0_ARM_INTERRUPT)  # Clear the event
-pypruss.exit()                              # Exit
+pruss.initialize()
+
+pruss.intc.ev_ch[EVENT0] = IRQ
+pruss.intc.ev_clear_one(EVENT0)
+pruss.intc.ev_enable_one(EVENT0)
+
+pruss.core0.load('./mem_write.bin')
+data = [10,20]
+
+pru0mem = pruss.core0.dram.map(length = len(data), offset = 1)
+for idx in range(0,len(data)):
+    pru0mem[idx] = data[idx]
+
+pruss.core0.run()
+
+pruss.intc.out_enable_one(IRQ)
+
+irq.irq_recv()
+event = pruss.intc.out_event[IRQ]
+pruss.intc.ev_clear_one(event)
+
+
+while not pruss.core0.halted:
+    pass
+
+pru0mem = pruss.core0.dram.map(length = 1, offset = 3)
+assert sum(data) == pru0mem[0]
+print("Test succesfull")

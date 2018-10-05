@@ -1,5 +1,5 @@
 
-COMPILER=/home/debian/ldgraphy/am335x_pru_package/pru_sw/utils/pasm -b 
+COMPILER=pasm -b 
 FILENAME=blinkled
 
 .PHONY: clean all
