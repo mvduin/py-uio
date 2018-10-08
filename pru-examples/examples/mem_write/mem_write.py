@@ -33,5 +33,8 @@ while not pruss.core0.halted:
     pass
 
 byte3 = pruss.core0.dram.map(length = 1, offset = 3)[0]
+[byte2, byte3] = pruss.core0.dram.map(length = 2, offset = 2)
+
+
 assert sum(data) == byte3
 print("Test succesfull")

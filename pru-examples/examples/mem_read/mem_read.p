@@ -1,8 +1,6 @@
 .origin 0
 .entrypoint START
 
-#define PRU0_ARM_INTERRUPT 19
-
 #define MAGIC_FOR_RAM0  0xbabe0000
 #define MAGIC_FOR_RAM1  0xbabe0001
 #define MAGIC_FOR_RAM2  0xbabe0002
