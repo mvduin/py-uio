@@ -11,4 +11,5 @@ START:
     SBCO r0, C4, 4, 4					
 ; send interrupt
     MOV R31.b0, PRU0_ARM_INTERRUPT+16
+    MOV R31.b0, 20+16
 HALT
