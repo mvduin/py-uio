@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" mem_read.py - test script for writing to PRU 0 mem using pyuio library """
+""" mem_read.py - test script for reading from PRU 0 mem using pyuio library """
 
 from pyuio.ti.icss import Icss
 from ctypes import c_uint32

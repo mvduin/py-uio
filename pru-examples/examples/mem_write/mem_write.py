@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" mem_write.py - test script for writing to PRU 0 mem using PyUIO library """
+""" mem_write.py - test script for writing and reading from PRU 0 mem using PyUIO library """
 from pyuio.ti.icss import Icss
 from pyuio.uio import Uio
 from ctypes import c_uint32
@@ -20,9 +20,7 @@ pruss.intc.ev_enable_one(EVENT0)
 pruss.core0.load('./mem_write.bin')
 data = [10,20]
 
-pru0mem = pruss.core0.dram.map(length = len(data), offset = 1)
-for idx in range(0,len(data)):
-    pru0mem[idx] = data[idx]
+pruss.core0.dram.write(data, offset = 1)
 
 pruss.core0.run()
 
@@ -32,10 +30,9 @@ irq.irq_recv()
 event = pruss.intc.out_event[IRQ]
 pruss.intc.ev_clear_one(event)
 
-
 while not pruss.core0.halted:
     pass
 
-pru0mem = pruss.core0.dram.map(length = 1, offset = 3)
-assert sum(data) == pru0mem[0]
+byte3 = pruss.core0.dram.map(length = 1, offset = 3)[0]
+assert sum(data) == byte3
 print("Test succesfull")

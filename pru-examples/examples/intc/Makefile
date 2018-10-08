@@ -1,6 +1,6 @@
 
-COMPILER=../../PASM/pasm -b 
-FILENAME=speed_test
+COMPILER=pasm -b 
+FILENAME=intc
 
 .PHONY: clean all
 
