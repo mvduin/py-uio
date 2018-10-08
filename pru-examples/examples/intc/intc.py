@@ -2,7 +2,6 @@
 """ intc.py - test script for receiving interrupts from PRU 0 using PyUIO library """
 from pyuio.ti.icss import Icss
 from pyuio.uio import Uio
-from ctypes import c_uint32
 
 
 IRQ = 2           # range 2 .. 9 (IRQ = Interrupt ReQuest)

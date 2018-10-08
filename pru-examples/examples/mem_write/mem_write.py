@@ -2,7 +2,6 @@
 """ mem_write.py - test script for writing and reading from PRU 0 mem using PyUIO library """
 from pyuio.ti.icss import Icss
 from pyuio.uio import Uio
-from ctypes import c_uint32
 
 
 IRQ = 2     # range 2 .. 9
