@@ -5,7 +5,7 @@
 
 import ctypes
 from ctypes import c_uint32 as uint
-from ti.irqc4 import IrqCombiner
+from ..irqc4 import IrqCombiner
 
 
 IDLEMODES = ['force', 'block', 'auto']

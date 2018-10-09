@@ -6,10 +6,8 @@
 # dts/bbx15-spi-test.dtsi for details.  It can probably be
 # adapted to the beaglebone without too much difficulty.
 
-import sys
-sys.path.insert( 0, '../src' )
 
-from ti.icss import Icss
+from pyuio.ti.icss import Icss
 import random
 
 pruss = Icss( "/dev/uio/pruss2/module" )

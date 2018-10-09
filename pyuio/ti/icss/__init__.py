@@ -3,7 +3,7 @@
 ##
 ## aka PRUSS, but not to be confused with the old one of Freon/Primus.
 
-from uio import Uio
+from ...uio import Uio
 from .cfg import Cfg
 from .core import Core
 from .intc import Intc

@@ -1,10 +1,7 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.insert( 0, '../src' )
-
-from ti.icss import Icss
-from uio import Uio
+from pyuio.ti.icss import Icss
+from pyuio.uio import Uio
 import ctypes
 
 EVENT0 = 16 # range 16..31

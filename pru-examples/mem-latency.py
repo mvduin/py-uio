@@ -4,10 +4,8 @@
 # the behaviour of the pruss interconnect with regard to
 # concurrent requests to the same local memory.
 
-import sys
-sys.path.insert( 0, '../src' )
 
-from ti.icss import Icss
+from pyuio.ti.icss import Icss
 import ctypes
 
 pruss = Icss( "/dev/uio/pruss/module" )
