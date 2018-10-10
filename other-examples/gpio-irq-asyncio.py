@@ -4,7 +4,7 @@ import sys
 sys.path.insert( 0, '../src' )
 
 import asyncio
-from uio import Uio
+from uio.device import Uio
 
 loop = asyncio.get_event_loop()
 

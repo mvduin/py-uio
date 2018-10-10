@@ -4,7 +4,7 @@ import sys
 sys.path.insert( 0, '../src' )
 
 from ti.icss import Icss
-from uio import Uio
+from uio.device import Uio
 import ctypes
 
 EVENT0 = 16 # range 16..31

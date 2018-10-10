@@ -1,4 +1,4 @@
-from uio import fix_ctypes_struct, struct_field, cached_getter
+from uio.utils import fix_ctypes_struct, struct_field, cached_getter
 import ctypes
 from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
 from ti.irqc4 import IrqCombiner
@@ -11,7 +11,7 @@ def lcdc_fck():
     except PermissionError:
         pass
     # fiiine, I'll do it the hard way
-    from devicetree import dt
+    from uio.utils import dt
     dt_lcdc = dt('&lcdc')
     assert dt_lcdc.u32('assigned-clocks') == dt('&lcd_gclk').phandle
     lcdc_gclk_parent = dt_lcdc.u32('assigned-clock-parents')

@@ -1,4 +1,4 @@
-from uio import Uio
+from uio.device import Uio
 from pathlib import Path
 import ctypes
 from ctypes import c_uint32 as uint

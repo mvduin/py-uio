@@ -50,7 +50,7 @@
 ## In PRU-ICSS, the core control and debug register spaces are adjacent, hence
 ## they are viewed as one structure here.
 
-from uio import cached_getter
+from uio.utils import cached_getter
 import ctypes
 from ctypes import ( c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint )
 from struct import unpack_from as unpack

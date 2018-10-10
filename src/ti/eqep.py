@@ -1,4 +1,4 @@
-from uio import fix_ctypes_struct
+from uio.utils import fix_ctypes_struct
 import ctypes
 from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
 from .eirq import EIrq

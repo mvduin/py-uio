@@ -3,7 +3,7 @@
 import sys
 sys.path.insert( 0, '../src' )
 
-from uio import Uio
+from uio.device import Uio
 from ti.subarctic.lcdc import Lcdc, lcdc_fck
 from time import sleep
 

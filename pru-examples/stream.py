@@ -3,7 +3,7 @@
 import sys
 sys.path.insert( 0, '../src' )
 
-from uio import fix_ctypes_struct
+from uio.utils import fix_ctypes_struct
 from ti.icss import Icss
 import ctypes
 from ctypes import c_uint32 as uint, c_uint16 as ushort
