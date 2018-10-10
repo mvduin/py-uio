@@ -128,7 +128,7 @@ class Intc( ctypes.Structure ):
 
     def initialize( self ):
         self.enabled = 0
-        self.config = 0
+        self.config = 3 << 2
         self.nesting = 0x100
         self.ev.disable( 0xffffffffffffffff )
         self.ev_polarity = 0xffffffffffffffff
