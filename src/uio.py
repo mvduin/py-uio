@@ -1,6 +1,7 @@
 import os
 import re
 import ctypes
+import struct
 from os import O_RDWR, O_CLOEXEC, O_NONBLOCK
 from stat import S_ISCHR
 from mmap import mmap
@@ -188,17 +189,28 @@ class Uio:
 
     # TODO determine if the device has any irq
 
-    def irq_enable( self ):
-        os.write( self._fd, b'\x01\x00\x00\x00' )
+    def irq_recv( self ):
+        try:
+            (counter,) = struct.unpack( "I", os.read( self._fd, 4 ) )
+            return counter
+        except BlockingIOError:
+            return None
+
+    def irq_control( self, value ):
+        os.write( self._fd, struct.pack( "I", value ) )
+
+
+    # irq control functions for uio_pdrv_genirq:
 
     def irq_disable( self ):
-        os.write( self._fd, b'\x00\x00\x00\x00' )
+        self.irq_control( 0 )
+
+    def irq_enable( self ):
+        self.irq_control( 1 )
 
     # note: irq is disabled once received.  you need to reenable it
     #   - before handling it, if edge-triggered
     #   - after handling it, if level-triggered
-    def irq_recv( self ):
-        os.read( self._fd, 4 )
 
 
 
