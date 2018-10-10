@@ -3,7 +3,7 @@
 import sys
 sys.path.insert( 0, '../src' )
 
-from ti.pwmss import Pwmss
+from uio.ti.pwmss import Pwmss
 
 cap = Pwmss( "/dev/uio/pwmss2" ).cap
 

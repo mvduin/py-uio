@@ -46,7 +46,7 @@
 
 import ctypes
 from ctypes import ( c_uint8 as ubyte, c_uint32 as uint )
-import ti.irqc4
+import uio.ti.irqc4
 
 ev_t = ctypes.c_int32   # event number (0..63), negative = no event pending
 ch_t = ubyte            # channel number (0..9)
@@ -55,7 +55,7 @@ out_t = ubyte           # output number (0..9)
 ev_set_t = ctypes.c_uint64
 out_set_t = uint
 
-Events = ti.irqc4.define( ev_set_t, stride=0x80 )
+Events = uio.ti.irqc4.define( ev_set_t, stride=0x80 )
 
 
 class _Fields( list ):

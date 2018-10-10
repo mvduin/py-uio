@@ -9,7 +9,7 @@
 import sys
 sys.path.insert( 0, '../src' )
 
-from ti.icss import Icss
+from uio.ti.icss import Icss
 import random
 
 pruss = Icss( "/dev/uio/pruss2/module" )

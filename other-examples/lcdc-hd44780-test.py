@@ -4,7 +4,7 @@ import sys
 sys.path.insert( 0, '../src' )
 
 from uio.device import Uio
-from ti.subarctic.lcdc import Lcdc, lcdc_fck
+from uio.ti.subarctic.lcdc import Lcdc, lcdc_fck
 from time import sleep
 
 uio = Uio( "/dev/uio/lcdc" )

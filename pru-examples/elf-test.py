@@ -3,7 +3,7 @@
 import sys
 sys.path.insert( 0, '../src' )
 
-from ti.icss import Icss
+from uio.ti.icss import Icss
 from ctypes import c_uint32
 import struct
 

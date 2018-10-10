@@ -1,7 +1,7 @@
 from uio.utils import fix_ctypes_struct, struct_field, cached_getter
 import ctypes
 from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
-from ti.irqc4 import IrqCombiner
+from uio.ti.irqc4 import IrqCombiner
 
 # determine lcdc functional clock
 def lcdc_fck():
