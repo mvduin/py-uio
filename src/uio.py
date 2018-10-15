@@ -107,7 +107,7 @@ class MemRegion:
     def read( rgn, length=None, offset=0 ):
         # read ctypes instance (does all necessary error checking)
         if isinstance( length, type ):
-            return length.from_buffer_copy( rgn._mmap, offset )
+            return (length * 1).from_buffer_copy( rgn._mmap, offset )[0]
 
         # read bytes
         return bytes( rgn.map( length, offset ) )
