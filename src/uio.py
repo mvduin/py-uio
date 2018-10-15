@@ -5,6 +5,7 @@ from os import O_RDWR, O_CLOEXEC, O_NONBLOCK
 from stat import S_ISCHR
 from mmap import mmap
 from pathlib import Path
+from ctypes import c_uint8 as ubyte
 
 PAGE_SHIFT = 12
 PAGE_SIZE = 1 << PAGE_SHIFT
@@ -90,6 +91,16 @@ class MemRegion:
 
     def __contains__( rgn, child ):
         return child.address >= rgn.address and child.end <= rgn.end
+
+    # fill bytes in region at given offset
+    def fill( rgn, length=None, offset=0, value=0 ):
+        if value not in range(256):
+            raise ValueError( "invalid fill value" )
+        if length is None:
+            length = rgn.mappable
+        # map ctypes instance (does all necessary error checking)
+        mem = (ubyte * length).from_buffer( rgn._mmap, offset )
+        ctypes.memset( mem, value, length )
 
     # write data into region at given offset
     def write( rgn, data, offset=0 ):
@@ -205,8 +216,6 @@ class Uio:
 # utilities to fix some annoying ctypes behaviour
 
 function = type( lambda: () )
-
-from ctypes import c_uint8 as ubyte
 
 class cached_getter:
     __slots__ = ('__name__', 'desc',)
