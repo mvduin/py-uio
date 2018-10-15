@@ -8,6 +8,7 @@ from .cfg import Cfg
 from .core import Core
 from .intc import Intc
 from ..ecap import ECap
+from ctypes import c_uint
 
 class Icss( Uio ):
     def __init__( self, path ):
@@ -72,7 +73,7 @@ class Icss( Uio ):
         ram = self.subregion( offset, pages * 4096, name=name )
         setattr( self, name, ram )
 
-    def initialize( self ):
+    def initialize( self, *, fill_memories=False ):
         # reset prcm controls to default just in case
         self.cfg.idlemode = 'auto'
         self.cfg.standbymode = 'auto'
@@ -88,6 +89,17 @@ class Icss( Uio ):
         for name in 'iram0', 'iram1', 'dram0', 'dram1', 'dram2':
             self._autodetect_ram( name )
         self._link_memories()
+
+        # fill memories if requested
+        if fill_memories:
+            for ram in self.dram0, self.dram1, self.dram2, self.ddr:
+                if ram:
+                    ram.fill()
+            for ram in self.iram0, self.iram1:
+                # fill iram with halt-instruction
+                n = ram.size // 4
+                mm = ram.map( c_uint * n )
+                mm[:] = [0x2a000000] * n
 
         # initialize interrupt controller
         self.cfg.intc = 0
