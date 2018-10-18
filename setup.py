@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 setup(
     name='py-uio',
     package_dir={'': 'src'},
-    packages=find_packages(where='src') + ['ti'],
+    packages=find_packages(where='src') + ['ti', 'ti.icss'],
     py_modules=['devicetree', 'uio'],
     version_format='{tag}.dev{commits}+{sha}',
     setup_requires=['very-good-setuptools-git-version'],
