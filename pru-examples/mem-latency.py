@@ -4,9 +4,6 @@
 # the behaviour of the pruss interconnect with regard to
 # concurrent requests to the same local memory.
 
-import sys
-sys.path.insert( 0, '../src' )
-
 from uio.ti.icss import Icss
 import ctypes
 

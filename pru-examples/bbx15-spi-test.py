@@ -6,9 +6,6 @@
 # dts/bbx15-spi-test.dtsi for details.  It can probably be
 # adapted to the beaglebone without too much difficulty.
 
-import sys
-sys.path.insert( 0, '../src' )
-
 from uio.ti.icss import Icss
 import random
 

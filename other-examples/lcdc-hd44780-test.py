@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.insert( 0, '../src' )
-
 from uio.device import Uio
 from uio.ti.subarctic.lcdc import Lcdc, lcdc_fck
 from time import sleep

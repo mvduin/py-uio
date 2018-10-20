@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.insert( 0, '../src' )
-
 from uio.ti.pwmss import Pwmss
 
 qep = Pwmss( "/dev/uio/pwmss2" ).qep

@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.insert( 0, '../src' )
-
 from uio.ti.icss import Icss
 
 pruss = Icss( "/dev/uio/pruss/module" )

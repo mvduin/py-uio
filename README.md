@@ -10,6 +10,24 @@ particular those using the `uio_pdrv_genirq` driver and those using the
 There isn't much documentation yet other than this README, but a little bit can
 be found on [the wiki](https://github.com/mvduin/py-uio/wiki).
 
+## Installation
+
+Make sure you have pip3 installed (`sudo apt-get install python3-pip`) to
+easily install and uninstall python packages. Using `setup.py` directly is not
+recommended.
+
+You can clone py-uio from git and install it with a single command:
+```bash
+pip3 install --src . -e 'git+https://github.com/mvduin/py-uio.git#egg=py-uio'
+```
+
+If you've already cloned the repository, you can install it with
+`pip3 install -e PATH`. The `-e` option causes a symlink (of sorts) to be
+installed in the python path rather than copying files, which means you don't
+need to reinstall the package after pulling changes.
+
+To uninstall simply use `pip3 uninstall py-uio`.
+
 ## uio_pruss
 
 Make sure the your `/boot/uEnv.txt` enables uio-pruss by setting
