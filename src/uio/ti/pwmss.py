@@ -18,9 +18,9 @@ class Regs( ctypes.Structure ):
             # 0x4_740_00_01  subarctic 2.1
 
             ("sysconfig",   uint),
-	    # bit   0      rx  reset
-	    # bit   1      rw  emu-free
-	    # bits  2- 3   rw  idlemode  (no wakeup support, default is auto)
+            # bit   0      rx  reset
+            # bit   1      rw  emu-free
+            # bits  2- 3   rw  idlemode  (no wakeup support, default is auto)
 
             ("clkreq",      Clk),
             ("clkack",      Clk),
