@@ -138,6 +138,9 @@ class Cfg( ctypes.Structure ):
             # By default IEP is in asynchronous mode.  Switching to synchronous
             # mode results in deterministic access timing.  Switching back to
             # asynchronous mode is not permitted other than by subsystem reset.
+            #
+            # XXX I'm not seeing any impact on IEP access timings.  Am I
+            # misunderstanding the point of this setting?
 
 
             ("pad",          uint),  # scratchpad config
