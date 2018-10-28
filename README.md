@@ -12,9 +12,10 @@ be found on [the wiki](https://github.com/mvduin/py-uio/wiki).
 
 ## Installation
 
-Make sure you have pip3 installed (`sudo apt-get install python3-pip`) to
-easily install and uninstall python packages. Using `setup.py` directly is not
-recommended.
+Make sure you have pip, setuptools, and wheel installed:
+```bash
+sudo apt install python3-pip python3-setuptools python3-wheel
+```
 
 You can clone py-uio from git and install it with a single command:
 ```bash
