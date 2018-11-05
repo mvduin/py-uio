@@ -261,6 +261,7 @@ class Core( ctypes.Structure ):
         self.control = 0
         assert( ( self.control & ( CONTROL_MASK | BUSY ) ) == nRESET )
         self.wake_en = 0
+        self.cycles = 0
         self._page[:] = (0,) * 8
         self.r[:] = (0,) * 32
 
