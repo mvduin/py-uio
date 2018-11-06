@@ -376,6 +376,8 @@ class Core( ctypes.Structure ):
         for mem in program.memories:
             mem.write_into( getattr( self, mem.name ) )
 
+        return program
+
 
 def add_reg( i ):
     def getter( self ):
