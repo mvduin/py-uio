@@ -81,6 +81,10 @@ class State( int ):
         return bool( self & PROFILE )
 
     @property
+    def single( self ):
+        return bool( self & SINGLE )
+
+    @property
     def crashed( self ):
         return bool( self & EXC )
 
@@ -100,7 +104,7 @@ class State( int ):
             s = 'halted'
             if self.crashed:
                 s += ', crashed'
-        elif self.running:
+        elif self.running and not self.single:
             s = 'running'
         else:
             s = 'halting'
