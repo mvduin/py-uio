@@ -96,6 +96,7 @@ class Program:
         self.memories = [ Memory( *meminfo ) for meminfo in memories ]
         self.labels = {}
         self.dbginfo = None
+        self.sourcefiles = None
 
     @property
     def code( self ):
@@ -162,6 +163,7 @@ class Program:
             file_off += 64
             name = name.decode( 'ascii' ).rstrip( "\x00" )
             files.append( SourceFile( self.path.parent / name ) )
+        self.sourcefiles = files
 
         dbginfo = []
         for i in range( n_instr ):
