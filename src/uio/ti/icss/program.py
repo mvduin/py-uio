@@ -1,3 +1,4 @@
+from uio.utils import cached_getter
 from struct import unpack_from as unpack
 from pathlib import Path
 from warnings import warn
@@ -78,6 +79,13 @@ class SourceFile:
     def __str__( self ):
         return str( self.path )
 
+    @cached_getter
+    def text( self ):
+        lines = self.path.read_text().replace( '\r', '' ).split( '\n' )
+        if len( lines ) > 0 and lines[-1] == '':
+            lines.pop()
+        return lines
+
 class Instruction:
     def __init__( self, index, opcode, srcfile, line ):
         self.index = index
@@ -88,6 +96,11 @@ class Instruction:
     @property
     def address( self ):
         return self.index << 2
+
+    @property
+    def text( self ):
+        assert self.line > 0
+        return self.file.text[ self.line - 1 ]
 
 class Program:
     def __init__( self ):
