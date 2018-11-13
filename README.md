@@ -22,7 +22,7 @@ You can clone py-uio from git and install it with a single command:
 pip3 install --src . -e 'git+https://github.com/mvduin/py-uio.git#egg=py-uio'
 ```
 
-If you've already cloned the repository, you can install it with
+Or, if you've already cloned the repository, you can install it with
 `pip3 install -e PATH`. The `-e` option causes a symlink (of sorts) to be
 installed in the python path rather than copying files, which means you don't
 need to reinstall the package after pulling changes.
@@ -31,8 +31,10 @@ To uninstall simply use `pip3 uninstall py-uio`.
 
 ## uio_pruss
 
-Make sure the your `/boot/uEnv.txt` enables uio-pruss by setting
+**BeagleBone only:** Make sure the your `/boot/uEnv.txt` enables uio-pruss by setting
 `uboot_overlay_pru=/lib/firmware/AM335X-PRU-UIO-00A0.dtbo`
+
+**BeagleBoard-X15 only:** `#include` [dra7-uio-pruss.dtsi](dts/dra7-uio-pruss.dtsi) into your dts and recompile the dtb. Copy the [uio-pruss-default-instance.conf](etc/tmpfiles.d/uio-pruss-default-instance.conf) file to `/etc/tmpfiles.d/`.
 
 Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
 `/etc/udev/rules.d/` and reboot.  This creates symlinks (in `/dev/uio/pruss/`) to
