@@ -19,30 +19,10 @@
 
 #include "dra7-uio-pruss.dtsi"
 
-&dra7_pmx_core {
-	mcspi3_pins: mcspi3 {
-		pinctrl-single,pins = <
-			// mcspi3 ioset 6
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 228, PIN_OUTPUT_PULLUP | MUX_MODE1 )  // P17.33  cs1
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 224, PIN_INPUT_PULLUP  | MUX_MODE1 )  // P17.04  clk
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 225, PIN_OUTPUT_PULLUP | MUX_MODE1 )  // P17.07  d1 (mosi)
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 226, PIN_INPUT_PULLUP  | MUX_MODE1 )  // P17.36  d0 (miso)
-		>;
-	};
-
-	pruss2_pins: pruss2 {
-		pinctrl-single,pins = <
-			// pruss2 core 0 ioset 2
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 222, PIN_INPUT_PULLUP | MUX_MODE12 | MODE_SELECT )  // P17.03  in   1  (sclk)
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 223, PIN_INPUT_PULLUP | MUX_MODE12 | MODE_SELECT )  // P17.34  in   2  (cs)
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 229, PIN_OUTPUT       | MUX_MODE13 | MODE_SELECT )  // P17.37  out  8  (miso)
-			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 232, PIN_INPUT_PULLUP | MUX_MODE12 | MODE_SELECT )  // P17.06  in  11  (mosi)
-		>;
-	};
-};
 
 &mcspi3 {
 	status = "okay";
+
 	pinctrl-names = "default";
 	pinctrl-0 = <&mcspi3_pins>;
 
@@ -54,7 +34,36 @@
 	};
 };
 
+&dra7_pmx_core {
+	mcspi3_pins: mcspi3 {
+		pinctrl-single,pins = <
+			// mcspi3 ioset 6
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 228, PIN_OUTPUT_PULLUP | MUX_MODE1 )  // P17.33  cs1
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 224, PIN_INPUT_PULLUP  | MUX_MODE1 )  // P17.04  clk
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 225, PIN_OUTPUT_PULLUP | MUX_MODE1 )  // P17.07  d1 (mosi)
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 226, PIN_INPUT_PULLUP  | MUX_MODE1 )  // P17.36  d0 (miso)
+		>;
+	};
+};
+
+
+// NOTE: for these pins, the desired iodelay configuration is manual with all-zero iodelay values,
+// which is why I'm using MODE_SELECT but don't have an explicit iodelay block. Omitting explicit
+// iodelay configuration isn't laziness, I'm a bit concerned to do so in DT due to erratum i933.
+
 &pruss2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pruss2_pins>;
+};
+
+&dra7_pmx_core {
+	pruss2_pins: pruss2 {
+		pinctrl-single,pins = <
+			// pruss2 core 0 ioset 2
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 222, PIN_INPUT_PULLUP | MUX_MODE12 | MODE_SELECT )  // P17.03  in   1  (sclk)
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 223, PIN_INPUT_PULLUP | MUX_MODE12 | MODE_SELECT )  // P17.34  in   2  (cs)
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 229, PIN_OUTPUT       | MUX_MODE13 | MODE_SELECT )  // P17.37  out  8  (miso)
+			DRA7XX_CORE_IOPAD( 0x3400 + 4 * 232, PIN_INPUT_PULLUP | MUX_MODE12 | MODE_SELECT )  // P17.06  in  11  (mosi)
+		>;
+	};
 };
