@@ -1,3 +1,5 @@
+# vim: ft=udevrules
+
 # allow declaring a symlink for a device in DT
 
 ATTR{device/of_node/symlink}!="", \

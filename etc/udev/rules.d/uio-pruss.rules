@@ -1,3 +1,5 @@
+# vim: ft=udevrules
+
 # apply this file only to pruss_uio devices and their children
 # (unfortunately DRIVERS!="pruss_uio" doesn't work, hence this workaround)
 DRIVERS=="pruss_uio",  GOTO="PRUSS"

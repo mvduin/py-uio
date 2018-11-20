@@ -1,2 +1,4 @@
+# vim: ft=udevrules
+
 # give some group access rights (adjust as needed)
 SUBSYSTEM=="uio", GROUP="users", MODE="0660"
