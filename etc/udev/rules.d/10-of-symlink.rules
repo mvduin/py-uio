@@ -5,6 +5,6 @@
 ATTR{device/of_node/symlink}!="", \
 	ENV{OF_SYMLINK}="%s{device/of_node/symlink}"
 
-ENV{OF_SYMLINK}!="", \
+ENV{OF_SYMLINK}!="", ENV{DEVNAME}!="", \
 	SYMLINK+="%E{OF_SYMLINK}", \
 	TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/dev/%E{OF_SYMLINK}"
