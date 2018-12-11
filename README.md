@@ -14,6 +14,7 @@ be found on [the wiki](https://github.com/mvduin/py-uio/wiki).
 
 Make sure you have pip, setuptools, and wheel installed:
 ```bash
+sudo apt update
 sudo apt install python3-pip python3-setuptools python3-wheel
 ```
 
