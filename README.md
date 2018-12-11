@@ -41,11 +41,12 @@ Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
 allow the uio-pruss devices to be located easily.
 
 Now you can try out the various [pru-examples](pru-examples/):
- * [test.py](pru-examples/test.py) is a minimalistic example that initializes register R0 of a pru core to 123, loads and executes a [tiny pru program](pru-examples/fw/test.pasm) that increments R0, and then reads back and prints R0 (which should therefore print 124).
+ * [basic-test.py](pru-examples/basic-test.py) is a minimalistic example that initializes register R0 of a pru core to 123, loads and executes a [tiny pru program](pru-examples/fw/test.pasm) that increments R0, and then reads back and prints R0 (which should therefore print 124).
  * [ddr-ping.py](pru-examples/ddr-ping.py) is a small test of using a shared DDR3 memory region.
  * [elf-test.py](pru-examples/elf-test.py) demonstrates how to load an ELF executable produced by clpru.
  * [intc-test.py](pru-examples/intc-test.py) is a more involved example that showcases sharing a data structure (in pruss local memory) between python code and the PRU cores, and sending events from both pru cores via the pruss interrupt controller to event handlers in python.
  * [intc-test-asyncio.py](pru-examples/intc-test-asyncio.py) is an [asyncio](https://docs.python.org/3/library/asyncio.html) version of the same example.
+ * [debugging.py](pru-examples/debugging.py) demonstrates how the pru core can be controlled and inspected to trace program execution.
 
 To recompile the [assembly examples](pru-examples/fw/) you will need pasm, which you can just compile from source:
 ```bash
