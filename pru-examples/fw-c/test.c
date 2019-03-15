@@ -1,6 +1,6 @@
-far int foo = 41;
+far int volatile foo = 41;
 
 int main() {
 	foo++;
-	asm("\thalt");
+	__halt();
 }
