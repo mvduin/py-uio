@@ -158,6 +158,25 @@ class EQep( ctypes.Structure ):
             #
             #   0x4_4d3_11_03  (v1.3.2 on subarctic 2.1)
         ]
+
+    def reset( self ):
+        self.irq.enabled = 0
+        self.imt_config = 0
+        self.ctr_config = 0
+        self.io_config = 0
+        self.cmp_config = 0
+        self.status = 0xffff
+        self.irq.clear( 0xffff )
+        self.position = 0
+        self.ld_position = 0
+        self.maximum = 0xffffffff
+        self.compare = 0
+        self.timer_counter = 0
+        self.timer_maximum = 0xffffffff
+        self.wdog_counter = 0
+        self.wdog_compare = 0
+        self.imt_counter = 0
+
 EQep.ld_compare = EQep.compare
 
 assert ctypes.sizeof(EQep) == 0x60
