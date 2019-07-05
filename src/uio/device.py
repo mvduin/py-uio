@@ -7,10 +7,14 @@ from stat import S_ISCHR
 from mmap import mmap
 from pathlib import Path
 from ctypes import c_uint8 as ubyte
+from fcntl import ioctl
 
 PAGE_SHIFT = 12
 PAGE_SIZE = 1 << PAGE_SHIFT
 PAGE_MASK = -PAGE_SIZE
+
+UIO_IOC_GET_PINCTRL_STATE = 2 << 30 | 32 << 16 | 117 << 8 | 0x40
+UIO_IOC_SET_PINCTRL_STATE = 1 << 30 | 32 << 16 | 117 << 8 | 0x41
 
 # a physical memory region associated with an uio device
 class MemRegion:
@@ -196,6 +200,21 @@ class Uio:
     # shortcut to map default region (index 0)
     def map( self, struct, offset=0 ):
         return self.region().map( struct, offset )
+
+
+    # get/set pinctrl state
+    @property
+    def pinmux( self ):
+        buf = ioctl( self._fd, UIO_IOC_GET_PINCTRL_STATE, bytes(32) )
+        return str( buf[ 0 : buf.index(0) ], 'ascii' )
+
+    @pinmux.setter
+    def pinmux( self, value ):
+        if isinstance( value, str ):
+            value = bytes( value, 'ascii' )
+        else:
+            value = bytes( value )
+        ioctl( self._fd, UIO_IOC_SET_PINCTRL_STATE, value + bytes(32) )
 
 
     # TODO determine if the device has any irq
