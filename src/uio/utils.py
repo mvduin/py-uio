@@ -56,6 +56,7 @@ def dt( s ):
 function = type( lambda: () )
 
 from ctypes import c_uint8 as ubyte
+import ctypes
 
 class cached_getter:
     __slots__ = ('__name__', 'desc',)
