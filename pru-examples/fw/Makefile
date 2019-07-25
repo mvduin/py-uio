@@ -2,7 +2,7 @@ pasm_sources := $(wildcard *.pasm)
 pasm_binaries := ${pasm_sources:%.pasm=%.bin}
 
 PASM = pasm
-PASMFLAGS = -V3
+PASMFLAGS = -V3   # select core version
 PASMFLAGS += -L   # generate annotated source listing
 PASMFLAGS += -d   # generate debug data
 
