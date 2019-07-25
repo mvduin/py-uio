@@ -7,6 +7,7 @@ from uio.device import Uio
 from .cfg import Cfg
 from .core import Core
 from .intc import Intc
+from .uart import Uart
 from ..ecap import ECap
 from ctypes import c_uint
 
@@ -39,7 +40,7 @@ class Icss( Uio ):
         self.cfg   = self.map( Cfg,  0x26000 )
 
         # subsystem peripherals
-        #self.uart = self.map( Uart, 0x28000 )
+        self.uart  = self.map( Uart, 0x28000 )
         #self.iep  = self.map( Iep,  0x2e000 )
         self.ecap  = self.map( ECap, 0x30000 )
 
