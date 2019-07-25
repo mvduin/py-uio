@@ -32,14 +32,14 @@ To uninstall simply use `pip3 uninstall py-uio`.
 
 ## uio_pruss
 
-**BeagleBone only:** Make sure the your `/boot/uEnv.txt` enables uio-pruss by setting
-`uboot_overlay_pru=/lib/firmware/AM335X-PRU-UIO-00A0.dtbo`
-
-**BeagleBoard-X15 only:** `#include` [dra7-uio-pruss.dtsi](dts/dra7-uio-pruss.dtsi) into your dts and recompile the dtb. Copy the [uio-pruss-default-instance.conf](etc/tmpfiles.d/uio-pruss-default-instance.conf) file to `/etc/tmpfiles.d/`.
-
-Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
-`/etc/udev/rules.d/` and reboot.  This creates symlinks (in `/dev/uio/pruss/`) to
+Additional installation instructions:
+* Copy the [uio-pruss.rules](etc/udev/rules.d/uio-pruss.rules) file to
+`/etc/udev/rules.d/`.  This will create symlinks (in `/dev/uio/pruss/`) to
 allow the uio-pruss devices to be located easily.
+* **BeagleBone only:** Make sure the your `/boot/uEnv.txt` enables uio-pruss by setting
+`uboot_overlay_pru=/lib/firmware/AM335X-PRU-UIO-00A0.dtbo`
+* **BeagleBoard-X15 only:** `#include` [dra7-uio-pruss.dtsi](dts/dra7-uio-pruss.dtsi) into your dts and recompile the dtb. Copy the [uio-pruss-default-instance.conf](etc/tmpfiles.d/uio-pruss-default-instance.conf) file to `/etc/tmpfiles.d/`.
+* Reboot.
 
 Now you can try out the various [pru-examples](pru-examples/):
  * [basic-test.py](pru-examples/basic-test.py) is a minimalistic example that initializes register R0 of a pru core to 123, loads and executes a [tiny pru program](pru-examples/fw/test.pasm) that increments R0, and then reads back and prints R0 (which should therefore print 124).
