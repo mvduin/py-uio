@@ -194,8 +194,8 @@ class Uio:
         return self.region().subregion( offset, size, name )
 
     # shortcut to map default region (index 0)
-    def map( self, struct, offset=0 ):
-        return self.region().map( struct, offset )
+    def map( self, length_or_struct=None, offset=0 ):
+        return self.region().map( length_or_struct, offset )
 
 
     # TODO determine if the device has any irq
