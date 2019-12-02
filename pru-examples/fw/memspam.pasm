@@ -2,11 +2,13 @@
 
 #include "common.h"
 
-	jmp	load_spam
-	jmp	store_spam
-	jmp	load_spam_nop
-	jmp	store_spam_nop
-	jmp	store_spam_nop4
+	// dispatch table
+	jmp	load_spam	// 0
+	jmp	store_spam	// 1
+	jmp	load_spam_nop	// 2
+	jmp	store_spam_nop	// 3
+	jmp	store_spam_nop4	// 4
+	jmp	store_toggle	// 5
 
 load_spam:
 	slp	1
@@ -47,4 +49,12 @@ store_spam_nop4:
 	nop
 	nop
 store_spam_nop4_end:
+	halt
+
+store_toggle:
+	slp	1
+	loop	store_toggle_end, r0.w2
+	sbbo	&r2, r1, 0, 8
+	sbbo	&r4, r1, 0, 8
+store_toggle_end:
 	halt
