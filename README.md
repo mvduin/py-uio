@@ -40,6 +40,7 @@ allow the uio-pruss devices to be located easily.
 * **BeagleBone (except BeagleBone-AI) only:** Make sure the your `/boot/uEnv.txt` enables uio-pruss by setting
 `uboot_overlay_pru=/lib/firmware/AM335X-PRU-UIO-00A0.dtbo`
 * **BeagleBoard-X15 and BeagleBone-AI only:** `#include` [dra7-uio-pruss.dtsi](dts/dra7-uio-pruss.dtsi) into your dts and recompile the dtb. Copy the [uio-pruss-default-instance.conf](etc/tmpfiles.d/uio-pruss-default-instance.conf) file to `/etc/tmpfiles.d/`.
+* Update your initramfs with `sudo update-initramfs -u` (unless you're not using initramfs).
 * Reboot.
 
 Now you can try out the various [pru-examples](pru-examples/):
