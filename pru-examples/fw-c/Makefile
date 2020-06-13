@@ -24,17 +24,31 @@ LDFLAGS += --output_file=$@
 #LDFLAGS += --map_file=$@.map
 #LDFLAGS += --xml_link_info=$@.xml
 
-all :: test.out
+c_sources := $(wildcard *.c)
+cc_sources := $(wildcard *.cc)
+binaries := ${c_sources:%.c=%.out} ${cc_sources:%.cc=%.out}
+headers := $(wilcard *.h)
+
+all :: ${binaries}
 
 clean ::
-	${RM} test.out
+	${RM} ${binaries}
 
-test.out: test.obj
+${binaries}: %: ${headers}
+
+%.out: %.obj
 	${CL} $^ -z ${LDFLAGS} am335x.cmd
 
-
 %.obj: %.c
+	${CL} $<
+%.obj: %.cc
 	${CL} $<
 
 clean ::
 	${RM} *.out *.obj *.out.map *.out.xml *.asm
+
+# to examine compiler output:
+%.asm: %.c
+	${CL} -n --symdebug:none $<
+%.asm: %.cc
+	${CL} -n --symdebug:none $<
