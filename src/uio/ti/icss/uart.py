@@ -14,7 +14,7 @@ ERR_IRQ = 1 << 2
 MSR_IRQ = 1 << 3
 RXT_IRQ = 1 << 8  # controlled by enable-bit for RX_IRQ
 
-IIR_MAP = {
+_IIR_MAP = {
         0b0110: ERR_IRQ,
         0b0100: RX_IRQ,
         0b1100: RXT_IRQ,
@@ -22,6 +22,17 @@ IIR_MAP = {
         0b0000: MSR_IRQ,
         0b0001: 0,
     }
+
+LSR_RX_AVAIL    = 1 << 0
+LSR_RX_OVERRUN  = 1 << 1
+LSR_RX_PARITY   = 1 << 2
+LSR_RX_FRAMING  = 1 << 3
+LSR_RX_BREAK    = 1 << 4
+LSR_TX_EMPTY    = 1 << 5
+LSR_TX_DONE     = 1 << 6
+
+SYSC_RX_ENABLED = 1 << 13
+SYSC_TX_ENABLED = 1 << 14
 
 class Uart( ctypes.Structure ):
     _fields_ = [
@@ -112,37 +123,7 @@ class Uart( ctypes.Structure ):
 
     @property
     def irq_status( self ):
-        return IIR_MAP[ self._iir_fcr & 15 ];
-
-    def _tx_space( self, blocking ):
-        bittime = None
-        while True:
-            lsr = self.lsr
-            # this event is lost on lsr read, so we _have_ to do something with it (XXX confirm this)
-            if lsr & ( 1 << 1 ):
-                raise RuntimeError( "Receive overrun" )
-            if lsr & ( 1 << 5 ):
-                return 16
-            if not blocking:
-                return 0
-            if bittime is None:
-                bittime = 1 / self.baudrate
-            sleep( bittime )
-
-    # write data (iterable of ints, e.g. bytes object) to uart
-    # if blocking is False, returns actual number of bytes written
-    def write( self, data, blocking=True ):
-        space = 0
-        for n, byte in enumerate( data ):
-            if byte not in range( 256 ):
-                raise RuntimeError( "Invalid byte" )
-            if space == 0:
-                space = self._tx_space( blocking )
-                if space == 0:
-                    break
-            self._io = byte
-            space -= 1
-        return n
+        return _IIR_MAP[ self._iir_fcr & 15 ]
 
     @property
     def oversampling( self ):
@@ -203,11 +184,11 @@ class Uart( ctypes.Structure ):
             raise RuntimeError( "Invalid number of data bits" )
 
         if databits == 5:
-            if stopbits not in ( 1, 1.5 )
+            if stopbits not in ( 1, 1.5 ):
                 raise RuntimeError( "Invalid number of stop bits" )
             lcr = [ 1, 1.5 ].index( stopbits ) << 2
         else:
-            if stopbits not in ( 1, 2 )
+            if stopbits not in ( 1, 2 ):
                 raise RuntimeError( "Invalid number of stop bits" )
             lcr = [ 5, 6, 7, 8 ].index( databits )
             lcr |= [ 1, 2 ].index( stopbits ) << 2
@@ -215,15 +196,45 @@ class Uart( ctypes.Structure ):
         if parity != 'n':
             raise RuntimeError("TODO: parity not yet supported")
 
-        sysconfig = 1 << 13 | 1 << 14
-
         self.irq_enabled = 0
         self.sysconfig = 0
-        self.configure_fifos( rx_trigger_level )
+        self._iir_fcr = 0
         self.mcr = 0
         self.lcr = lcr
         self.msr
         self.lsr
         self.oversampling = oversampling
         self.divisor = divisor
-        self.sysconfig = sysconfig
+        self._iir_fcr = 1
+        self.configure_fifos( rx_trigger_level )
+        self.sysconfig |= SYSC_RX_ENABLED | SYSC_TX_ENABLED
+
+    def _tx_space( self, blocking ):
+        bittime = None
+        while True:
+            lsr = self.lsr
+            # this event is lost on lsr read, so we _have_ to do something with it (XXX confirm this)
+            if lsr & ( 1 << 1 ):
+                raise RuntimeError( "Receive overrun" )
+            if lsr & ( 1 << 5 ):
+                return 16
+            if not blocking:
+                return 0
+            if bittime is None:
+                bittime = 1 / self.baudrate
+            sleep( bittime )
+
+    # write data (iterable of ints, e.g. bytes object) to uart
+    # if blocking is False, returns actual number of bytes written
+    def write( self, data, blocking=True ):
+        space = 0
+        for n, byte in enumerate( data ):
+            if byte not in range( 256 ):
+                raise RuntimeError( "Invalid byte" )
+            if space == 0:
+                space = self._tx_space( blocking )
+                if space == 0:
+                    break
+            self._io = byte
+            space -= 1
+        return n
