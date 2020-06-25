@@ -114,3 +114,10 @@ class Uart( ctypes.Structure ):
     @property
     def fifos_enabled( self ):
         return bool( self._iir_fcr & 0x80 );
+
+    def enable_fifos( self, rx_trigger_level=1 ):
+        rx_trigger_level = [ 1, 4, 8, 14].index( rx_trigger_level )
+        self._iir_fcr = rx_trigger_level << 6 | 1 << 3 | 1 << 0
+
+    def disable_fifos( self ):
+        self._iir_fcr = 0
