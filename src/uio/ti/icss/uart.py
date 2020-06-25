@@ -5,6 +5,8 @@
 import ctypes
 from ctypes import c_uint32 as uint
 
+UART_CLK = 192000000
+
 RX_IRQ	= 1 << 0
 TX_IRQ	= 1 << 1
 ERR_IRQ = 1 << 2
@@ -111,6 +113,31 @@ class Uart( ctypes.Structure ):
     def irq_status( self ):
         return IIR_MAP[ self._iir_fcr & 15 ];
 
+    @property
+    def oversampling( self ):
+        return ( 16, 13 )[ self.mdr & 1 ]
+
+    @oversampling.setter
+    def oversampling( self, value ):
+        if value not in ( 16, 13 ):
+            raise RuntimeError( "Invalid oversampling factor" )
+        self.mdr = ( 16, 13 ).index( value )
+
+    @property
+    def divisor( self ):
+        return self.div_lsb | self.div_msb << 8
+
+    @divisor.setter
+    def divisor( self, value ):
+        if value not in range( 1, 0x10000 ):
+            raise RuntimeError( "Invalid divisor" )
+        self.div_lsb = value & 0xff
+        self.div_msb = value >> 8
+
+    @property
+    def baudrate( self ):
+        return UART_CLK / self.oversampling / self.divisor
+
     def configure_fifos( self, rx_trigger_level=1, reset_rx=False, reset_tx=False ):
         fcr = 1 << 0 | 1 << 3
         if reset_rx:
@@ -120,20 +147,42 @@ class Uart( ctypes.Structure ):
         fcr |= [ 1, 4, 8, 14].index( rx_trigger_level ) << 6
         self._iir_fcr = fcr
 
-    def initialize( self, *, divisor, oversampling=16, databits=8, parity='n', stopbits=1, rx_trigger_level=1 ):
+    def initialize( self, baudrate, databits=8, parity='n', stopbits=1, rx_trigger_level=1 ):
+        if baudrate > 12e6:
+            raise RuntimeError( "Baudrate too high (max is 12000000)" )
+
+        oversampling = 16
+        divisor = round( 192e6 / 16 / baudrate )
+        deviation = abs( 192e6 / 16 / divisor / baudrate - 1 )
+
+        divisor13 = round( 192e6 / 13 / baudrate )
+        deviation13 = abs( 192e6 / 13 / divisor13 / baudrate - 1 )
+
+        if divisor13 <= 0xffff and deviation13 < deviation:
+            oversampling = 13
+            divisor = divisor13
+            deviation = deviation13
+
+        if divisor > 0xffff:
+            raise RuntimeError( "Baudrate is too low" )
+        if deviation > 0.02:
+            raise RuntimeError( "Baudrate deviation greater than 2%" )
+
+        if databits not in range( 5, 9 ):
+            raise RuntimeError( "Invalid number of data bits" )
+
         if databits == 5:
+            if stopbits not in ( 1, 1.5 )
+                raise RuntimeError( "Invalid number of stop bits" )
             lcr = [ 1, 1.5 ].index( stopbits ) << 2
         else:
+            if stopbits not in ( 1, 2 )
+                raise RuntimeError( "Invalid number of stop bits" )
             lcr = [ 5, 6, 7, 8 ].index( databits )
             lcr |= [ 1, 2 ].index( stopbits ) << 2
 
         if parity != 'n':
             raise RuntimeError("TODO: parity not yet supported")
-
-        if divisor not in range( 1, 65536 ):
-            raise RuntimeError("Invalid divisor")
-
-        mdr = [ 16, 13 ].index( oversampling )
 
         sysconfig = 1 << 13 | 1 << 14
 
@@ -144,7 +193,6 @@ class Uart( ctypes.Structure ):
         self.lcr = lcr
         self.msr
         self.lsr
-        self.mdr = mdr
-        self.div_msb = divisor >> 8
-        self.div_lsb = divisor & 0xff
+        self.oversampling = oversampling
+        self.divisor = divisor
         self.sysconfig = sysconfig
