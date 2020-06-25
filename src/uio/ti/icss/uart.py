@@ -111,13 +111,40 @@ class Uart( ctypes.Structure ):
     def irq_status( self ):
         return IIR_MAP[ self._iir_fcr & 15 ];
 
-    @property
-    def fifos_enabled( self ):
-        return bool( self._iir_fcr & 0x80 );
+    def configure_fifos( self, rx_trigger_level=1, reset_rx=False, reset_tx=False ):
+        fcr = 1 << 0 | 1 << 3
+        if reset_rx:
+            fcr |= 1 << 1
+        if reset_tx:
+            fcr |= 1 << 2
+        fcr |= [ 1, 4, 8, 14].index( rx_trigger_level ) << 6
+        self._iir_fcr = fcr
 
-    def enable_fifos( self, rx_trigger_level=1 ):
-        rx_trigger_level = [ 1, 4, 8, 14].index( rx_trigger_level )
-        self._iir_fcr = rx_trigger_level << 6 | 1 << 3 | 1 << 0
+    def initialize( self, *, divisor, oversampling=16, databits=8, parity='n', stopbits=1, rx_trigger_level=1 ):
+        if databits == 5:
+            lcr = [ 1, 1.5 ].index( stopbits ) << 2
+        else:
+            lcr = [ 5, 6, 7, 8 ].index( databits )
+            lcr |= [ 1, 2 ].index( stopbits ) << 2
 
-    def disable_fifos( self ):
-        self._iir_fcr = 0
+        if parity != 'n':
+            raise RuntimeError("TODO: parity not yet supported")
+
+        if divisor not in range( 1, 65536 ):
+            raise RuntimeError("Invalid divisor")
+
+        mdr = [ 16, 13 ].index( oversampling )
+
+        sysconfig = 1 << 13 | 1 << 14
+
+        self.irq_enabled = 0
+        self.sysconfig = 0
+        self.configure_fifos( rx_trigger_level )
+        self.mcr = 0
+        self.lcr = lcr
+        self.msr
+        self.lsr
+        self.mdr = mdr
+        self.div_msb = divisor >> 8
+        self.div_lsb = divisor & 0xff
+        self.sysconfig = sysconfig
