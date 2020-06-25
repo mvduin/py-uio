@@ -4,6 +4,7 @@
 
 import ctypes
 from ctypes import c_uint32 as uint
+from time import sleep
 
 UART_CLK = 192000000
 
@@ -112,6 +113,36 @@ class Uart( ctypes.Structure ):
     @property
     def irq_status( self ):
         return IIR_MAP[ self._iir_fcr & 15 ];
+
+    def _tx_space( self, blocking ):
+        bittime = None
+        while True:
+            lsr = self.lsr
+            # this event is lost on lsr read, so we _have_ to do something with it (XXX confirm this)
+            if lsr & ( 1 << 1 ):
+                raise RuntimeError( "Receive overrun" )
+            if lsr & ( 1 << 5 ):
+                return 16
+            if not blocking:
+                return 0
+            if bittime is None:
+                bittime = 1 / self.baudrate
+            sleep( bittime )
+
+    # write data (iterable of ints, e.g. bytes object) to uart
+    # if blocking is False, returns actual number of bytes written
+    def write( self, data, blocking=True ):
+        space = 0
+        for n, byte in enumerate( data ):
+            if byte not in range( 256 ):
+                raise RuntimeError( "Invalid byte" )
+            if space == 0:
+                space = self._tx_space( blocking )
+                if space == 0:
+                    break
+            self._io = byte
+            space -= 1
+        return n
 
     @property
     def oversampling( self ):
