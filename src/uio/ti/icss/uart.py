@@ -5,6 +5,7 @@
 import ctypes
 from ctypes import c_uint32 as uint
 from time import sleep
+from uio.utils import cached_getter
 
 UART_CLK = 192000000
 
@@ -36,7 +37,7 @@ SYSC_TX_ENABLED = 1 << 14
 
 class Uart( ctypes.Structure ):
     _fields_ = [
-            ("_io",         uint),  #<>
+            ("",            uint),  # _read_byte and _write_byte
 
             ("irq_enabled", uint),  #rw
             # bit   0       rw  receive irq(s) enabled
@@ -44,7 +45,7 @@ class Uart( ctypes.Structure ):
             # bit   2       rw  error irq enabled
             # bit   3       rw  modem status irq enabled
 
-            ("_iir_fcr",    uint),
+            ("",            uint),  # _read_iir and _write_fcr
 
             ("lcr",         uint),  #rw  line control
             #  bits  0- 1   rw  data bits: 0=5, 1=6, 2=7, 3=8
@@ -121,9 +122,28 @@ class Uart( ctypes.Structure ):
             #   bit   0     rw  oversampling: 0 = 16×, 1 = 13×
     ]
 
+    # XXX workaround for bad ctypes behaviour
+    @cached_getter
+    def _regs( self ):
+        return memoryview( self ).cast('B').cast('L')
+
+    def _read_byte( self ):
+        return self._regs[0]
+
+    def _write_byte( self, value ):
+        assert value in range(256)
+        self._regs[0] = value
+
+    def _read_iir( self ):
+        return self._regs[2]
+
+    def _write_fcr( self, value ):
+        assert value in range(256)
+        self._regs[2] = value
+
     @property
     def irq_status( self ):
-        return _IIR_MAP[ self._iir_fcr & 15 ]
+        return _IIR_MAP[ self._read_iir() & 15 ]
 
     @property
     def oversampling( self ):
@@ -157,9 +177,9 @@ class Uart( ctypes.Structure ):
         if reset_tx:
             fcr |= 1 << 2
         fcr |= [ 1, 4, 8, 14].index( rx_trigger_level ) << 6
-        self._iir_fcr = fcr
+        self._write_fcr( fcr );
 
-    def initialize( self, baudrate, databits=8, parity='n', stopbits=1, rx_trigger_level=1 ):
+    def initialize( self, baudrate, databits=8, parity='n', stopbits=1, rx_trigger_level=1, fifos=True ):
         if baudrate > 12e6:
             raise RuntimeError( "Baudrate too high (max is 12000000)" )
 
@@ -198,43 +218,16 @@ class Uart( ctypes.Structure ):
 
         self.irq_enabled = 0
         self.sysconfig = 0
-        self._iir_fcr = 0
+        self._write_fcr( 0 )
         self.mcr = 0
         self.lcr = lcr
         self.msr
-        self.lsr
+        while self.lsr & 1:
+            self._read_byte()
+        self._read_iir()
         self.oversampling = oversampling
         self.divisor = divisor
-        self._iir_fcr = 1
-        self.configure_fifos( rx_trigger_level )
+        if fifos:
+            self._write_fcr( 1 )
+            self.configure_fifos( rx_trigger_level, reset_rx=True, reset_tx=True )
         self.sysconfig |= SYSC_RX_ENABLED | SYSC_TX_ENABLED
-
-    def _tx_space( self, blocking ):
-        bittime = None
-        while True:
-            lsr = self.lsr
-            # this event is lost on lsr read, so we _have_ to do something with it (XXX confirm this)
-            if lsr & ( 1 << 1 ):
-                raise RuntimeError( "Receive overrun" )
-            if lsr & ( 1 << 5 ):
-                return 16
-            if not blocking:
-                return 0
-            if bittime is None:
-                bittime = 1 / self.baudrate
-            sleep( bittime )
-
-    # write data (iterable of ints, e.g. bytes object) to uart
-    # if blocking is False, returns actual number of bytes written
-    def write( self, data, blocking=True ):
-        space = 0
-        for n, byte in enumerate( data ):
-            if byte not in range( 256 ):
-                raise RuntimeError( "Invalid byte" )
-            if space == 0:
-                space = self._tx_space( blocking )
-                if space == 0:
-                    break
-            self._io = byte
-            space -= 1
-        return n
