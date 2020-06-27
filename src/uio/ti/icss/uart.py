@@ -234,7 +234,7 @@ class Uart( ctypes.Structure ):
 
 
     # utility method for performing I/O via the UART.
-    # obviously these should not be done while the UART is in use by PRU.
+    # obviously this should never be called while the UART is in use by PRU.
     def io( self, send_data=b'', recv_bytes=0, blocking=True ):
         send_data = bytes( send_data )
         poll_interval = 4 / self.baudrate
@@ -255,15 +255,18 @@ class Uart( ctypes.Structure ):
                 # overrun happened after these 16 bytes were received
                 for i in range(16):
                     recv_data.append( self._read_byte() )
+
             elif lsr & LSR_RX_AVAIL:
                 # at least one byte available
                 recv_data.append( self._read_byte() )
+
             else:
                 # nothing available to read
                 if not blocking:
                     break  # not allowed to wait
                 if send_data == b'' and len( recv_data ) >= recv_bytes:
                     break  # we've sent everything and received enough
+
                 # wait and try again later
                 sleep( poll_interval )
                 continue
