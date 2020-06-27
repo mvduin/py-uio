@@ -29,6 +29,7 @@ LSR_RX_OVERRUN  = 1 << 1
 LSR_RX_PARITY   = 1 << 2
 LSR_RX_FRAMING  = 1 << 3
 LSR_RX_BREAK    = 1 << 4
+LSR_RX_ERR_ANY  = LSR_RX_OVERRUN | LSR_RX_PARITY | LSR_RX_FRAMING | LSR_RX_BREAK
 LSR_TX_EMPTY    = 1 << 5
 LSR_TX_DONE     = 1 << 6
 
@@ -179,7 +180,7 @@ class Uart( ctypes.Structure ):
         fcr |= [ 1, 4, 8, 14].index( rx_trigger_level ) << 6
         self._write_fcr( fcr );
 
-    def initialize( self, baudrate, databits=8, parity='n', stopbits=1, rx_trigger_level=1, fifos=True ):
+    def initialize( self, baudrate, databits=8, parity='n', stopbits=1, rx_trigger_level=1 ):
         if baudrate > 12e6:
             raise RuntimeError( "Baudrate too high (max is 12000000)" )
 
@@ -227,7 +228,48 @@ class Uart( ctypes.Structure ):
         self._read_iir()
         self.oversampling = oversampling
         self.divisor = divisor
-        if fifos:
-            self._write_fcr( 1 )
-            self.configure_fifos( rx_trigger_level, reset_rx=True, reset_tx=True )
+        self._write_fcr( 1 )
+        self.configure_fifos( rx_trigger_level, reset_rx=True, reset_tx=True )
         self.sysconfig |= SYSC_RX_ENABLED | SYSC_TX_ENABLED
+
+
+    # utility method for performing I/O via the UART.
+    # obviously these should not be done while the UART is in use by PRU.
+    def io( self, send_data=b'', recv_bytes=0, blocking=True ):
+        send_data = bytes( send_data )
+        poll_interval = 4 / self.baudrate
+        recv_data = bytearray()
+        send_bytes = 0
+
+        while True:
+            lsr = self.lsr
+
+            # send up to 16 bytes whenever tx fifo is empty
+            if lsr & LSR_TX_EMPTY and send_data != b'':
+                for byte in send_data[ : 16 ]:
+                    self._write_byte( byte )
+                    send_bytes += 1
+                send_data = send_data[ 16 : ]
+
+            if lsr & LSR_RX_OVERRUN:
+                # overrun happened after these 16 bytes were received
+                for i in range(16):
+                    recv_data.append( self._read_byte() )
+            elif lsr & LSR_RX_AVAIL:
+                # at least one byte available
+                recv_data.append( self._read_byte() )
+            else:
+                # nothing available to read
+                if not blocking:
+                    break  # not allowed to wait
+                if send_data == b'' and len( recv_data ) >= recv_bytes:
+                    break  # we've sent everything and received enough
+                # wait and try again later
+                sleep( poll_interval )
+                continue
+
+            # bail out if an error occurred
+            if lsr & LSR_RX_ERR_ANY:
+                break
+
+        return ( send_bytes, recv_data, lsr & LSR_RX_ERR_ANY )
