@@ -252,9 +252,11 @@ class Uart( ctypes.Structure ):
                 send_data = send_data[ 16 : ]
 
             if lsr & LSR_RX_OVERRUN:
-                # overrun happened after these 16 bytes were received
-                for i in range(16):
+                # overrun happened after these 15 bytes were received
+                for i in range(15):
                     recv_data.append( self._read_byte() )
+                # and either before or after this byte
+                self._read_byte()
 
             elif lsr & LSR_RX_AVAIL:
                 # at least one byte available
