@@ -3,6 +3,7 @@
 ## This is the same TL16C550-based UART used in TI C6x/Keystone DSPs.
 
 import ctypes
+import io
 from ctypes import c_uint32 as uint
 from time import sleep
 from uio.utils import cached_getter
@@ -154,6 +155,8 @@ class Uart( ctypes.Structure ):
     def oversampling( self, value ):
         if value not in ( 16, 13 ):
             raise RuntimeError( "Invalid oversampling factor" )
+        if self.has_io:
+            raise RuntimeError( "I/O object should be closed before changing baudrate" )
         self.mdr = ( 16, 13 ).index( value )
 
     @property
@@ -164,6 +167,8 @@ class Uart( ctypes.Structure ):
     def divisor( self, value ):
         if value not in range( 1, 0x10000 ):
             raise RuntimeError( "Invalid divisor" )
+        if self.has_io:
+            raise RuntimeError( "I/O object should be closed before changing baudrate" )
         self.div_lsb = value & 0xff
         self.div_msb = value >> 8
 
@@ -215,7 +220,10 @@ class Uart( ctypes.Structure ):
             lcr |= [ 1, 2 ].index( stopbits ) << 2
 
         if parity != 'n':
-            raise RuntimeError("TODO: parity not yet supported")
+            raise RuntimeError( "TODO: parity not yet supported" )
+
+        if self.has_io:
+            raise RuntimeError( "I/O object should be closed before reinitializing UART" )
 
         self.irq_enabled = 0
         self.sysconfig = 0
@@ -233,48 +241,136 @@ class Uart( ctypes.Structure ):
         self.sysconfig |= SYSC_RX_ENABLED | SYSC_TX_ENABLED
 
 
-    # utility method for performing I/O via the UART.
-    # obviously this should never be called while the UART is in use by PRU.
-    def io( self, send_data=b'', recv_bytes=0, blocking=True ):
-        send_data = bytes( send_data )
-        poll_interval = 4 / self.baudrate
-        recv_data = bytearray()
-        send_bytes = 0
+    @cached_getter
+    def io( self ):
+        """Return (existing or new) object for performing I/O via the UART.
+
+        This might for example be used to initialize an external device before
+        starting the PRU core that communicates with it.  You should .close()
+        the I/O object before starting the PRU core that uses the UART.
+        """
+        return UartIO( self )
+
+    @property
+    def has_io( self ):
+        """Check if I/O object exists."""
+        return 'io' in self.__dict__
+
+
+class UartIO( io.BufferedIOBase ):
+    def __init__( self, uart ):
+        if uart.has_io:
+            raise RuntimeError( "Illegal use of private constructor" )
+        if uart.divisor == 0:
+            raise RuntimeError( "UART has not been initialized" )
+
+        self._uart = uart
+        self._rx_buffer = bytearray()
+        self._tx_fifo_space = 0
+        self._tx_done = False
+        self._poll_interval = ( 7 + ( uart.lcr & 3 ) ) / uart.baudrate
+        self._poll()
+
+    def readable( self ):
+        return super.readable() or True
+
+    def writable( self ):
+        return super.writable() or True
+
+    def close( self ):
+        if self.closed:
+            return
+        super().close()
+        assert self._uart.__dict__.get('io') is self
+        del self._uart.__dict__['io']
+
+    def _poll( self, until=None ):
+        if self.closed:
+            raise RuntimeError( "I/O object has been closed" )
 
         while True:
-            lsr = self.lsr
+            lsr = self._uart.lsr
 
-            # send up to 16 bytes whenever tx fifo is empty
-            if lsr & LSR_TX_EMPTY and send_data != b'':
-                for byte in send_data[ : 16 ]:
-                    self._write_byte( byte )
-                    send_bytes += 1
-                send_data = send_data[ 16 : ]
-
-            if lsr & LSR_RX_OVERRUN:
-                # overrun happened after these 15 bytes were received
-                for i in range(15):
-                    recv_data.append( self._read_byte() )
-                # and either before or after this byte
-                self._read_byte()
-
-            elif lsr & LSR_RX_AVAIL:
-                # at least one byte available
-                recv_data.append( self._read_byte() )
-
-            else:
-                # nothing available to read
-                if not blocking:
-                    break  # not allowed to wait
-                if send_data == b'' and len( recv_data ) >= recv_bytes:
-                    break  # we've sent everything and received enough
-
-                # wait and try again later
-                sleep( poll_interval )
+            if lsr & LSR_TX_EMPTY:
+                self._tx_fifo_space = 16
+            if lsr & LSR_TX_DONE:
+                self._tx_done = True
+            if not ( lsr & LSR_RX_AVAIL ):
+                if until is None or until():
+                    break
+                sleep( self._poll_interval )
                 continue
 
-            # bail out if an error occurred
-            if lsr & LSR_RX_ERR_ANY:
-                break
+            self._rx_buffer.append( self._uart._read_byte() )
 
-        return ( send_bytes, recv_data, lsr & LSR_RX_ERR_ANY )
+            if lsr & LSR_RX_ERR_ANY:
+                if lsr & LSR_RX_OVERRUN:
+                    raise RuntimeError( "Receive FIFO overrun" )
+                elif lsr & LSR_RX_BREAK:
+                    raise RuntimeError( "Break detected" )
+                elif lsr & LSR_RX_FRAMING:
+                    raise RuntimeError( "Framing error" )
+                elif lsr & LSR_RX_PARITY:
+                    raise RuntimeError( "Parity error" )
+
+    def flush( self ):
+        self._poll( lambda: self._tx_done )
+
+    def _read0( self, size ):
+        if size is None or size < 0 or size >= len( self._rx_buffer ):
+            data = self._rx_buffer
+            self._rx_buffer = bytearray()
+        else:
+            data = self._rx_buffer[ : size ]
+            del self._rx_buffer[ : size ]
+        return data
+
+    def _read1( self, size ):
+        self._poll()
+        return self._read0( size )
+
+    def _read( self, size ):
+        if size is None or size < 0:
+            raise ValueError( "Unbounded read not allowed" )
+        self._poll( lambda: len( self._rx_buffer ) >= size )
+        return self._read0( size )
+
+    def read1( self, size=-1 ):
+        return bytes( self._read1( size ) )
+
+    def read( self, size ):
+        return bytes( self._read( size ) )
+
+    def readinto1( self, b ):
+        with memoryview( b ) as m:
+            with m.cast( 'B' ) as m:
+                data = self._read1( len( m ) )
+                m[ : len( data ) ] = data
+
+    def readinto( self, b ):
+        with memoryview( b ) as m:
+            with m.cast( 'B' ) as m:
+                data = self._read( len( m ) )
+                m[ : len( data ) ] = data
+
+    def write( self, b ):
+        for byte in bytes( b ):
+            if self._tx_fifo_space == 0:
+                self._poll( lambda: self._tx_fifo_space > 0 )
+            self._uart._write_byte( byte )
+            self._tx_fifo_space -= 1
+
+    def readline( self, size=-1, *, newline=b'\n' ):
+        if type( newline ) is not bytes:
+            raise TypeError( "'newline' argument must be a bytes object" )
+        buf = self._rx_buffer
+        if size is None or size < 0:
+            self._poll( lambda: newline in buf )
+            size = buf.index( newline ) + len( newline )
+        else:
+            self._poll( lambda: len( buf ) >= size or newline in buf )
+            pos = buf.find( newline, 0, size )
+            if pos >= 0:
+                size = pos + len( newline )
+                return bytes( self._read0( size ) )
+        return bytes( self._read0( size ) )
