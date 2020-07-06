@@ -263,6 +263,7 @@ class Core( ctypes.Structure ):
         self.wake_en = 0
         self.cycles = 0
         self._page[:] = (0,) * 8
+        self.c28 = 0x10000  # shared memory
         self.r[:] = (0,) * 32
 
     def halt( self, *, wakeup=True, check=None ):
