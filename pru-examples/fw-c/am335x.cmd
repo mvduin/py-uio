@@ -18,9 +18,16 @@ MEMORY
 	IRAM	(  IX) : org = 0x00000000,  len = 0x2000  /* 8K iram */
 
 	PAGE 1:   /* data address space */
-	LOCAL	(RWI ) : org = 0x00000000,  len = 0x2000, CREGISTER=24  /* 8K data ram for this core */
-	PEER	(RWI ) : org = 0x00002000,  len = 0x2000, CREGISTER=25  /* 8K data ram for other core */
-	SHARED	(RWI ) : org = 0x00010000,  len = 0x3000, CREGISTER=28  /* 12K shared data ram */
+	LOCAL	(RWI ) : org = 0x00000000,  len = 0x2000,  cregister = 24  /* 8K data ram for this core */
+	PEER	(RWI ) : org = 0x00002000,  len = 0x2000,  cregister = 25  /* 8K data ram for other core */
+	SHARED	(RWI ) : org = 0x00010000,  len = 0x3000,  cregister = 28  /* 12K shared data ram */
+
+	/* Peripherals */
+	PRU_CFG	(RW  ) : org = 0x00026000,  len = 0x1000,  cregister =  4
+	PRU_ECAP(RW  ) : org = 0x00030000,  len = 0x1000,  cregister =  3
+	PRU_IEP	(RW  ) : org = 0x0002e000,  len = 0x1000,  cregister = 26
+	PRU_INTC(RW  ) : org = 0x00020000,  len = 0x1000,  cregister =  0
+	PRU_UART(RW  ) : org = 0x00028000,  len = 0x1000,  cregister =  7
 }
 
 SECTIONS
