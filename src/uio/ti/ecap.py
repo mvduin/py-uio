@@ -20,6 +20,60 @@ class Pwm( ctypes.Structure ):
             ("ld_compare",  ctr_t),     #rw  loaded into compare on counter wrap
         ]
 
+    @property
+    def period( self ):
+        """PWM period in clock cycles (max 2**32).
+
+        Note: if period is set to 2**32 then 100% duty cycle is impossible.
+        """
+        return self.ld_maximum + 1
+
+    @period.setter
+    def period( self, value ):
+        if value not in range( 1, 2**32 + 1 ):
+            raise ValueError( "Invalid PWM period" )
+        self.ld_maximum = value - 1
+
+    @property
+    def value( self ):
+        """PWM pulse width in clock cycles."""
+        return min( self.ld_compare, self.period )
+
+    @value.setter
+    def value( self, value ):
+        if value not in range( self.period + 1 ):
+            raise ValueError( "Invalid PWM value" )
+        if value == 2**32:
+            raise ValueError( "Cannot set duty cycle to 100% when period is 2**32" )
+        self.ld_compare = value
+
+    @property
+    def duty_cycle( self ):
+        """PWM duty cycle as float between 0.0 and 1.0 (inclusive)."""
+        return self.value / self.period
+
+    @duty_cycle.setter
+    def duty_cycle( self, value ):
+        self.value = round( value * self.period )
+
+    def initialize( self, period, *, invert=False, value=None, duty_cycle=None ):
+        """Initialize PWM output."""
+        if value is not None and duty_cycle is not None:
+            raise ValueError( "You cannot specify both 'value' and 'duty_cycle'" )
+        # disable and reset counter
+        self.parent.config &= 3 << 22
+        self.parent.counter = 0
+        # initialize pwm period and value
+        self.period = period
+        if duty_cycle is not None:
+            self.duty_cycle = duty_cycle
+        else:
+            self.value = value or 0
+        self.maximum = self.ld_maximum
+        self.compare = self.ld_compare
+        # enable pwm output
+        self.parent.config |= 1 << 25 | invert << 26 | 1 << 20 | 1 << 15
+
 @fix_ctypes_struct
 class ECap( ctypes.Structure ):
     _fields_ = [
@@ -85,14 +139,16 @@ class ECap( ctypes.Structure ):
             # bit   7      compare match   (pwm mode)
 
 
-            ("", ubyte * (0x5c - 0x34)),
+            ("", u8 * (0x5c - 0x34)),
 
-            ("ident",       uint),      #r-
+            ("ident",       u32),       #r-
             #   0x4_4d2_21_00  (v1.0.4 on subarctic 2.1)
         ]
 
     @cached_getter
     def pwm( self ):
-        return Pwm.from_buffer( self.capture )
+        pwm = Pwm.from_buffer( self.capture )
+        pwm.parent = self
+        return pwm
 
 assert ctypes.sizeof(ECap) == 0x60
