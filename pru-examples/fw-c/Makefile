@@ -6,7 +6,9 @@ RM = rm -f
 cgt_root := $(patsubst %/bin/clpru,%,$(realpath $(shell which clpru)))
 
 CL = clpru
+ifneq (${cgt_root},/usr)
 CL += -I${cgt_root}/include -i${cgt_root}/lib
+endif
 # target options
 CL += -v3
 CL += --hardware_mac=on
