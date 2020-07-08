@@ -1,9 +1,9 @@
 from uio.utils import fix_ctypes_struct, cached_getter
 import ctypes
-from ctypes import c_uint8 as ubyte, c_uint16 as ushort, c_uint32 as uint
+from ctypes import c_uint8 as u8, c_uint16 as u16, c_uint32 as u32
 from .eirq import EIrq
 
-ctr_t = uint    # counter value
+ctr_t = u32    # counter value
 
 class Pwm( ctypes.Structure ):
     # pwm mode:
@@ -82,10 +82,10 @@ class ECap( ctypes.Structure ):
 
             ("capture",     ctr_t * 4), #rw  captured counter values   (capture mode)
 
-            ("", ubyte * (0x28 - 0x18) ),
+            ("", u8 * (0x28 - 0x18) ),
 
 
-            ("config",      uint),
+            ("config",      u32),
             #
             # ## capture mode config:
             #
