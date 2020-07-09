@@ -19,10 +19,11 @@ MEMORY
 
 	PAGE 1:   /* data address space */
 	LOCAL	(RWI ) : org = 0x00000000,  len = 0x2000,  cregister = 24  /* 8K data ram for this core */
-	PEER	(RWI ) : org = 0x00002000,  len = 0x2000,  cregister = 25  /* 8K data ram for other core */
 	SHARED	(RWI ) : org = 0x00010000,  len = 0x3000,  cregister = 28  /* 12K shared data ram */
 
-	/* Peripherals */
+	PAGE 2:   /* uninitializable space */
+	PEER	(RW  ) : org = 0x00002000,  len = 0x2000,  cregister = 25  /* 8K data ram for other core */
+
 	PRU_CFG	(RW  ) : org = 0x00026000,  len = 0x1000,  cregister =  4
 	PRU_ECAP(RW  ) : org = 0x00030000,  len = 0x1000,  cregister =  3
 	PRU_IEP	(RW  ) : org = 0x0002e000,  len = 0x1000,  cregister = 26
