@@ -4,6 +4,7 @@ import ctypes
 from ctypes import c_uint32 as uint
 from .ecap import ECap
 from .eqep import EQep
+from .epwm import EPwm
 
 class Clk( ctypes.Structure ):
     _fields_ = [
@@ -83,3 +84,14 @@ class Pwmss( Uio ):
             self._qep = uio.map( EQep )
             self._qep.irq.uio = uio
         return self._qep
+
+    @property
+    def pwm( self ):
+        if not self._pwm:
+            self.regs.clkreq.pwm = 1
+            if self.regs.clkack.pwm != 1:
+                raise RuntimeError( "submodule clock failure?" )
+            uio = Uio( self.path.parent/'pwm', parent=self )
+            self._pwm = uio.map( EPwm )
+            self._pwm.irq.uio = uio
+        return self._pwm
