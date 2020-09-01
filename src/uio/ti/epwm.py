@@ -214,6 +214,36 @@ class EPwm( ctypes.Structure ):
             cfg |= ( coarse - 1 ) << 10
         self.config = cfg
 
+    def stop( self ):
+        self.ld_compare[:] = ( 0, 0 )
+
+        if ( self.config & 3 ) != 3:
+            while self.cmp_load >> 8:
+                pass
+
+        self.config |= 3
+
+    def initialize( self, period, divider=1 ):
+        if period not in range( 2, 65536 ):
+            raise ValueError( "Invalid ePWM period" )
+
+        self.stop()
+
+        self.pwm_a_config = 2 << 0 | 1 << 4  # set on counter zero, clear on compare A
+        self.pwm_b_config = 2 << 0 | 1 << 8  # set on counter zero, clear on compare B
+        self.cmp_load = 1 << 0 | 1 << 2  # reload cmp when counter reaches max
+        self.config |= 1 << 15
+
+        self.ld_maximum = period - 1
+
+        # set period immediately and reset counter
+        self.config |= 1 << 3
+        self.counter = 0
+        self.ld_maximum = period - 1
+        self.config &= ~( 1 << 3 )
+
+        self.config &= ~3  # start counter
+
 add_field( EPwm, EPwm.ld_compare.offset + 0, 'ld_compare_a', ctr_t )
 add_field( EPwm, EPwm.ld_compare.offset + 2, 'ld_compare_b', ctr_t )
 
