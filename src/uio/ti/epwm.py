@@ -189,6 +189,31 @@ class EPwm( ctypes.Structure ):
             ("ident",       u32),  #r-  4'4d1'09'03  (v1.3.1)
         ]
 
+    @property
+    def divider( self ):
+        cfg = self.config
+        fine = ( cfg >> 7 ) & 7
+        coarse = ( cfg >> 10 ) & 7
+        if fine:
+            return fine << ( 1 + coarse )
+        else:
+            return 1 << coarse
+
+    @divider.setter
+    def divider( self, value ):
+        if value not in range( 1, 1793 ):
+            raise ValueError( "Invalid ePWM divider" )
+        cfg = self.config & ~0x1f80
+        if value != 1:
+            coarse = ( value & -value ).bit_length() - 1  # count trailing zeros
+            coarse = min( coarse, 8 )
+            fine = value >> coarse
+            if coarse == 0 or fine > 7:
+                raise ValueError( "ePWM divider %d (== %d << %d) not supported" % ( value, fine, coarse ) )
+            cfg |= fine << 7
+            cfg |= ( coarse - 1 ) << 10
+        self.config = cfg
+
 add_field( EPwm, EPwm.ld_compare.offset + 0, 'ld_compare_a', ctr_t )
 add_field( EPwm, EPwm.ld_compare.offset + 2, 'ld_compare_b', ctr_t )
 
