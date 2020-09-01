@@ -1,10 +1,9 @@
-from uio.utils import fix_ctypes_struct, cached_getter
+from uio.utils import fix_ctypes_struct, cached_getter, add_field
 import ctypes
 from ctypes import c_uint8 as u8, c_uint16 as u16, c_uint32 as u32
 from .eirq import EIrq
 
 ctr_t = u16  # counter value
-hrctr_t = u32  # counter value (bits 16-31) + hr adjust (bits 8-15)
 
 # ePWM has a main irq and a tripzone irq. The tripzone irq uses an EIrq register
 # block just like eCAP and eQEP do. The main irq's register block however is
@@ -57,7 +56,8 @@ class EPwm( ctypes.Structure ):
             # bit   1      rc  sync-in event
             # bit   2      rc  max event
 
-            ("ld_counter",  hrctr_t),   #rw
+            ("",            u16),       #rw
+            ("ld_counter",  ctr_t),     #rw
             ("counter",     ctr_t),     #rw
 
             ("ld_maximum",  ctr_t),     #rw
@@ -76,7 +76,7 @@ class EPwm( ctypes.Structure ):
             # In updown mode, at an endpoint (where the direction is reversed),
             # the new direction applies.
 
-            ("cmp_config",  u16),
+            ("cmp_load",    u16),
             # bits  0- 1   rw  load cmp-a ev:  0 zero  1 max  2 both  3 none
             # bits  2- 3   rw  load cmp-b ev:  0 zero  1 max  2 both  3 none
             # bit   4      rw  load cmp-a on write (bits 0-1 ignored)
@@ -86,14 +86,13 @@ class EPwm( ctypes.Structure ):
             # bit   8      r-  load cmp-a pending
             # bit   9      r-  load cmp-b pending
 
-            ("ld_cmp_a_hr", hrctr_t),   #r>
-            ("ld_cmp_b",    ctr_t),     #r>
+            ("",            u16),       #r>
+            ("ld_compare",  ctr_t * 2), #r>
 
 
             #-------- output control -------------------------------------------
 
-            ("pwm_a_config",    u16),
-            ("pwm_b_config",    u16),
+            ("pwm_config",      u16 * 2),
             # bits  0- 1   rw  action on zero
             # bits  2- 3   rw  action on max
             # bits  4- 5   rw  action on up-a
@@ -189,5 +188,11 @@ class EPwm( ctypes.Structure ):
 
             ("ident",       u32),  #r-  4'4d1'09'03  (v1.3.1)
         ]
+
+add_field( EPwm, EPwm.ld_compare.offset + 0, 'ld_compare_a', ctr_t )
+add_field( EPwm, EPwm.ld_compare.offset + 2, 'ld_compare_b', ctr_t )
+
+add_field( EPwm, EPwm.pwm_config.offset + 0, 'pwm_a_config', u16 )
+add_field( EPwm, EPwm.pwm_config.offset + 2, 'pwm_b_config', u16 )
 
 assert ctypes.sizeof(EPwm) == 0x60
