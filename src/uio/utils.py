@@ -102,3 +102,8 @@ def struct_field( offset, ctype, name='field' ):
     class Struct( ctypes.Structure ):
         _fields_ = [ ("", ubyte * offset), (name, ctype) ]
     return getattr( Struct, name )
+
+def add_field( Struct, offset, name, ctype ):
+    assert not hasattr( Struct, name )
+    assert offset in range( 0, ctypes.sizeof( Struct ) - ctypes.sizeof( ctype ) + 1 )
+    setattr( Struct, name, struct_field( offset, ctype, name ) )
