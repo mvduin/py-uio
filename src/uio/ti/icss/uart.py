@@ -371,8 +371,6 @@ class UartIO( io.BufferedIOBase ):
             self._tx_fifo_space -= 1
         if flush:
             self.flush( discard=discard );
-        elif discard:
-            self.discard()
 
     def readline( self, size=-1, *, newline=b'\n' ):
         if type( newline ) is not bytes:
