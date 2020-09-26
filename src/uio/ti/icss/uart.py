@@ -269,7 +269,6 @@ class UartIO( io.BufferedIOBase ):
         self._tx_fifo_space = 0
         self._tx_done = False
         self._poll_interval = ( 7 + ( uart.lcr & 3 ) ) / uart.baudrate
-        self._poll()
 
     def readable( self ):
         return super.readable() or True
@@ -284,9 +283,12 @@ class UartIO( io.BufferedIOBase ):
         assert self._uart.__dict__.get('io') is self
         del self._uart.__dict__['io']
 
-    def _poll( self, until=None ):
+    def _poll( self, until=None, discard=False ):
         if self.closed:
             raise RuntimeError( "I/O object has been closed" )
+
+        if discard:
+            self._rx_buffer.clear()
 
         while True:
             lsr = self._uart.lsr
@@ -301,6 +303,10 @@ class UartIO( io.BufferedIOBase ):
                 sleep( self._poll_interval )
                 continue
 
+            if discard:
+                self._uart._read_byte()
+                continue
+
             self._rx_buffer.append( self._uart._read_byte() )
 
             if lsr & LSR_RX_ERR_ANY:
@@ -313,8 +319,11 @@ class UartIO( io.BufferedIOBase ):
                 elif lsr & LSR_RX_PARITY:
                     raise RuntimeError( "Parity error" )
 
-    def flush( self ):
-        self._poll( lambda: self._tx_done )
+    def flush( self, discard=False ):
+        self._poll( lambda: self._tx_done, discard=discard )
+
+    def discard( self ):
+        self._poll( discard=True )
 
     def _read0( self, size ):
         if size is None or size < 0 or size >= len( self._rx_buffer ):
@@ -353,12 +362,17 @@ class UartIO( io.BufferedIOBase ):
                 data = self._read( len( m ) )
                 m[ : len( data ) ] = data
 
-    def write( self, b ):
+    def write( self, b, flush=False, discard=False ):
         for byte in bytes( b ):
             if self._tx_fifo_space == 0:
-                self._poll( lambda: self._tx_fifo_space > 0 )
+                self._poll( lambda: self._tx_fifo_space > 0, discard=discard )
+            self._tx_done = False
             self._uart._write_byte( byte )
             self._tx_fifo_space -= 1
+        if flush:
+            self.flush( discard=discard );
+        elif discard:
+            self.discard()
 
     def readline( self, size=-1, *, newline=b'\n' ):
         if type( newline ) is not bytes:
