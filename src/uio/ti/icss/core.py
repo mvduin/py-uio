@@ -372,6 +372,40 @@ class Core( ctypes.Structure ):
         return ( cycles, instrs )
 
 
+    # these assume attributes for memories have been added
+    # (see uio.ti.icss.Icss._link_memories)
+
+    def _address_map( self, address ):
+        if address < 0x10000:
+            if address < 0x2000:
+                return ( self.dram, address )
+            if address < 0x4000:
+                return ( self.peer_dram, address - 0x2000 )
+        elif address < 0x20000:
+            return ( self.shared_dram, address - 0x10000 )
+        raise ValueError( "Invalid PRU memory address: 0x%x" % address )
+
+    # fill bytes in PRU memory
+    def fill( self, length, address, value=0 ):
+        ( mem, offset ) = self._address_map( address )
+        return mem.fill( length, offset, value )
+
+    # write data to PRU memory
+    def write( self, data, address ):
+        ( mem, offset ) = self._address_map( address )
+        return mem.write( data, offset )
+
+    # read data from PRU memory
+    def read( self, length_or_type, address ):
+        ( mem, offset ) = self._address_map( address )
+        return mem.read( length_or_type, offset )
+
+    # map data in PRU memory
+    def map( self, length_or_type, address ):
+        ( mem, offset ) = self._address_map( address )
+        return mem.map( length_or_type, offset )
+
+    # load program onto PRU core
     def load( self, program ):
         # program is Program object or file path
         if not isinstance( program, Program ):
