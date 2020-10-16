@@ -12,10 +12,11 @@ core = pruss.core0
 # load ELF executable
 core.load( 'fw-c/test.out' )
 
-# map shared memory
-shmem = core.map( c_uint32, 0x10000 )
+# map variables in pru memory
+foo = core.map( c_uint32, 0x1234 )
+bar = core.map( c_uint32, 0x10000 )
 
-print( shmem.value )
+print( "foo = %d,  bar = %d" % ( foo.value, bar.value ) )
 
 core.run()
 
@@ -23,4 +24,4 @@ print( "waiting for core to halt" )
 while not core.halted:
     pass
 
-print( shmem.value )
+print( "foo = %d,  bar = %d" % ( foo.value, bar.value ) )
