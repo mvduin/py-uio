@@ -13,7 +13,7 @@ core = pruss.core0
 core.load( 'fw-c/test.out' )
 
 # map shared memory
-shmem = core.shared_dram.map( c_uint32 )
+shmem = core.map( c_uint32, 0x10000 )
 
 print( shmem.value )
 
