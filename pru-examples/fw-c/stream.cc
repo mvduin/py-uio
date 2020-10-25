@@ -8,7 +8,7 @@ struct Message {
 // layout of shared ddr3 memory (filled in by loader)
 struct DDRLayout {
 	Message volatile *msgbuf;
-	uint32_t num_msgs;
+	uint16_t num_msgs;
 };
 
 struct SharedVars {
@@ -17,7 +17,7 @@ struct SharedVars {
 	int abort_line;
 
 	// read-pointer updated by python
-	uint32_t ridx;
+	uint16_t ridx;
 };
 
 far struct DDRLayout ddr __attribute__((location(0x10000))) = {};
@@ -45,11 +45,11 @@ static inline void assert_at( bool cond, char const *file, int line )
 
 
 // local copy of write-pointer
-static uint32_t widx = 0;
+static uint16_t widx = 0;
 
 // global var for write-pointer is located right after message ringbuffer
 #define ddr_msgbuf_end	( ddr.msgbuf + ddr.num_msgs )
-#define ddr_widx	( *(uint32_t volatile *)ddr_msgbuf_end )
+#define ddr_widx	( *(uint16_t volatile *)ddr_msgbuf_end )
 
 void initialize()
 {
@@ -61,7 +61,7 @@ void initialize()
 	assert( shmem.ridx == widx );
 }
 
-static inline uint32_t next_idx( uint32_t idx )
+static inline uint16_t next_idx( uint16_t idx )
 {
 	if( ++idx == ddr.num_msgs )
 		idx = 0;
@@ -70,7 +70,7 @@ static inline uint32_t next_idx( uint32_t idx )
 
 void send_message( uint32_t id )
 {
-	uint32_t next_widx = next_idx( widx );
+	uint16_t next_widx = next_idx( widx );
 
 	if( next_widx == shmem.ridx ) {
 		// can't send message, ringbuffer is full

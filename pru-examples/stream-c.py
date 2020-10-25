@@ -3,7 +3,7 @@
 from uio.utils import fix_ctypes_struct
 from uio.ti.icss import Icss
 import ctypes
-from ctypes import c_uint32 as u32
+from ctypes import c_uint32 as u32, c_uint16 as u16
 from time import sleep
 
 pruss = Icss( "/dev/uio/pruss/module" )
@@ -22,7 +22,7 @@ class Message( ctypes.Structure ):
 class DDRLayout( ctypes.Structure ):
     _fields_ = [
             ( 'msgbuf',      u32 ),
-            ( 'num_msgs',    u32 ),
+            ( 'num_msgs',    u16 ),
         ]
 
 # volatile variables in pruss shared memory
@@ -31,7 +31,7 @@ class SharedVars( ctypes.Structure ):
             ( 'abort_file', u32 ),
             ( 'abort_line', u32 ),
 
-            ( 'ridx',       u32 ),
+            ( 'ridx',       u16 ),
         ]
 
 MSGBUF_OFFSET = 0
@@ -41,7 +41,7 @@ NUM_MSGS = 1024
 ddr_layout = core.map( DDRLayout, 0x10000 )
 shmem = core.map( SharedVars, 0x10100 )
 msgbuf = ddr.map( Message * NUM_MSGS, MSGBUF_OFFSET )
-ddr_widx = ddr.map( u32, MSGBUF_OFFSET + ctypes.sizeof( msgbuf ) )
+ddr_widx = ddr.map( u16, MSGBUF_OFFSET + ctypes.sizeof( msgbuf ) )
 
 # inform pru about layout of shared ddr memory region
 ddr_layout.msgbuf       = ddr.address + MSGBUF_OFFSET
