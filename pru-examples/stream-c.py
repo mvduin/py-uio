@@ -56,12 +56,13 @@ ddr_layout.msgbuf       = ddr.address + MSGBUF_OFFSET
 ddr_layout.num_msgs     = NUM_MSGS
 ddr_layout.msg_size     = ctypes.sizeof( Message )
 
-# local copy of read-pointer
+# local copies of read-pointer and write-pointer
 ridx = 0
+widx = 0
 
 # initialize pointers in shared memory
 shmem.ridx = ridx
-ddr_widx.value = ridx
+ddr_widx.value = widx
 
 # ready, set, go!
 core.run()
@@ -90,9 +91,14 @@ def check_core():
 lastid = 0
 
 def recv_messages():
-    global ridx, lastid
+    global ridx, widx, lastid
 
-    while ridx != ddr_widx.value:
+    # read updated write-pointer
+    widx = ddr_widx.value
+    assert widx < NUM_MSGS  # sanity-check
+
+    # process messages
+    while ridx != widx:
         # note: it may be faster to copy a batch of messages from shared memory
         # instead of directly accessing individual messages and their fields.
         msg = msgbuf[ ridx ]
@@ -108,6 +114,7 @@ def recv_messages():
             ridx = 0
         shmem.ridx = ridx
 
+    # update user interface
     print( f'\ridx=0x{ridx:04x} id=0x{lastid:08x} ', end='', flush=True )
 
 
