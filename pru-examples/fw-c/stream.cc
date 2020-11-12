@@ -94,6 +94,6 @@ void main() {
 	uint32_t id = 0;
 	for(;;) {
 		send_message( ++id );
-		__delay_cycles( 100000 );
+		__delay_cycles( 10000 );
 	}
 }
