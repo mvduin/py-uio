@@ -36,8 +36,15 @@ class SharedVars( ctypes.Structure ):
             ( 'ridx',       u16 ),
         ]
 
+# if you don't want the ringbuffer at the start of the ddr region, specify offset here
 MSGBUF_OFFSET = 0
+
+# you can use a fixed ringbuffer size:
 NUM_MSGS = 1024
+# you can scale the ringbuffer to fit the size of the ddr region:
+NUM_MSGS = ( ddr.size - MSGBUF_OFFSET - ctypes.sizeof( u16 ) ) // ctypes.sizeof( Message )
+
+assert NUM_MSGS < 65536
 
 # map shared memory variables
 ddr_layout = core.map( DDRLayout, 0x10000 )
