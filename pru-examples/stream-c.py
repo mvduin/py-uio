@@ -5,6 +5,7 @@ from uio.ti.icss import Icss
 import ctypes
 from ctypes import c_uint32 as u32, c_uint16 as u16
 from time import sleep
+from sys import exit
 
 pruss = Icss( "/dev/uio/pruss/module" )
 pruss.initialize()
@@ -59,20 +60,43 @@ ddr_widx.value = ridx
 # ready, set, go!
 core.run()
 
+def check_core():
+    if not core.halted:
+        return
+
+    if core.state.crashed:
+        msg = f'core crashed at pc={core.pc}'
+    elif shmem.abort_file == 0:
+        msg = f'core halted at pc={core.pc}'
+    else:
+        # FIXME figure out better way to read C-string from PRU memory
+        abort_file = core.read( ctypes.c_char * 32, shmem.abort_file ).value
+        abort_file = abort_file.decode("ascii")
+        msg = f'core aborted at pc={core.pc} ({abort_file}:{shmem.abort_line})'
+
+    # dump some potentially interesting information:
+    msg += f'\n   ridx       = {ridx}'
+    msg += f'\n   shmem.ridx = {shmem.ridx}'
+    msg += f'\n   ddr_widx   = {ddr_widx.value}'
+
+    exit( msg )
+
 lastid = 0
 
-while not core.halted:
+def recv_messages():
+    global ridx, lastid
+
     while ridx != ddr_widx.value:
         # note: it may be faster to copy a batch of messages from shared memory
         # instead of directly accessing individual messages and their fields.
         msg = msgbuf[ ridx ]
 
-        # check message id sequence to detect if message has been dropped
+        # sanity-check that message id increments monotonically
         lastid = ( lastid + 1 ) & 0xffffffff
         assert msg.id == lastid
 
         # consume message and update read pointer
-        del msg
+        del msg  # direct access to message forbidden beyond this point
         ridx += 1
         if ridx == NUM_MSGS:
             ridx = 0
@@ -80,11 +104,17 @@ while not core.halted:
 
     print( f'\ridx=0x{ridx:04x} id=0x{lastid:08x} ', end='', flush=True )
 
-    sleep( 0.01 )
 
-abort_file = core.read( ctypes.c_char * 32, shmem.abort_file ).value  # FIXME
+try:
+    while True:
+        recv_messages()
+        check_core()
 
-print( f'core halted at {abort_file.decode("ascii")}:{shmem.abort_line}' )
-print( f'ridx       = {ridx}' )
-print( f'shmem.ridx = {shmem.ridx}' )
-print( f'ddr_widx   = {ddr_widx.value}' )
+        sleep( 0.01 )
+
+except KeyboardInterrupt:
+    pass
+
+finally:
+    print( '', flush=True )
+    core.halt()
