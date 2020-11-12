@@ -9,6 +9,7 @@ struct Message {
 struct DDRLayout {
 	Message volatile *msgbuf;
 	uint16_t num_msgs;
+	uint16_t msg_size;
 };
 
 struct SharedVars {
@@ -56,6 +57,7 @@ void initialize()
 	// perform sanity-checking
 	assert( 0x80000000 <= (uint32_t)ddr.msgbuf );
 	assert( ddr.msgbuf < ddr_msgbuf_end );
+	assert( ddr.msg_size == sizeof(Message) );
 
 	assert( ddr_widx == widx );
 	assert( shmem.ridx == widx );

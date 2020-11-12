@@ -23,6 +23,7 @@ class DDRLayout( ctypes.Structure ):
     _fields_ = [
             ( 'msgbuf',      u32 ),
             ( 'num_msgs',    u16 ),
+            ( 'msg_size',    u16 ),
         ]
 
 # volatile variables in pruss shared memory
@@ -46,6 +47,7 @@ ddr_widx = ddr.map( u16, MSGBUF_OFFSET + ctypes.sizeof( msgbuf ) )
 # inform pru about layout of shared ddr memory region
 ddr_layout.msgbuf       = ddr.address + MSGBUF_OFFSET
 ddr_layout.num_msgs     = NUM_MSGS
+ddr_layout.msg_size     = ctypes.sizeof( Message )
 
 # local copy of read-pointer
 ridx = 0
