@@ -103,7 +103,24 @@ def struct_field( offset, ctype, name='field' ):
         _fields_ = [ ("", ubyte * offset), (name, ctype) ]
     return getattr( Struct, name )
 
-def add_field( Struct, name, offset, ctype ):
+def struct_bitfield( offset, ctype, start, width, name='field' ):
+    size = ctypes.sizeof( ctype ) * 8
+    assert start in range( 0, size )
+    assert width in range( 1, size - start + 1 )
+
+    @fix_ctypes_struct
+    class Struct( ctypes.Structure ):
+        _fields_ = [ ("", ubyte * offset), (name, ctype, width) ]
+        if start != 0:
+            _fields_.insert( 1, ("", ctype, start) )
+    return getattr( Struct, name )
+
+def add_field( Struct, name, offset, ctype, bitfield_start=None, bitfield_width=None ):
     assert not hasattr( Struct, name )
     assert offset in range( 0, ctypes.sizeof( Struct ) - ctypes.sizeof( ctype ) + 1 )
-    setattr( Struct, name, struct_field( offset, ctype, name ) )
+
+    if bitfield_start is None and bitfield_width is None:
+        field = struct_field( offset, ctype, name )
+    else:
+        field = struct_bitfield( offset, ctype, bitfield_start, bitfield_width, name )
+    setattr( Struct, name, field )
