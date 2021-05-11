@@ -244,10 +244,10 @@ class EPwm( ctypes.Structure ):
 
         self.config &= ~3  # start counter
 
-add_field( EPwm, EPwm.ld_compare.offset + 0, 'ld_compare_a', ctr_t )
-add_field( EPwm, EPwm.ld_compare.offset + 2, 'ld_compare_b', ctr_t )
+add_field( EPwm, 'ld_compare_a', EPwm.ld_compare.offset + 0, ctr_t )
+add_field( EPwm, 'ld_compare_b', EPwm.ld_compare.offset + 2, ctr_t )
 
-add_field( EPwm, EPwm.pwm_config.offset + 0, 'pwm_a_config', u16 )
-add_field( EPwm, EPwm.pwm_config.offset + 2, 'pwm_b_config', u16 )
+add_field( EPwm, 'pwm_a_config', EPwm.pwm_config.offset + 0, u16 )
+add_field( EPwm, 'pwm_b_config', EPwm.pwm_config.offset + 2, u16 )
 
 assert ctypes.sizeof(EPwm) == 0x60
