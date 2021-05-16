@@ -156,6 +156,9 @@ class Uio:
         path = Path( '/dev/uio', path )
         self.path = path
 
+        if path.is_dir():
+            path = path / 'module'
+
         flags = O_RDWR | O_CLOEXEC
         if not blocking:
             flags |= O_NONBLOCK # for irq_recv
