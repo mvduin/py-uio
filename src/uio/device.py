@@ -165,7 +165,7 @@ class Uio:
         if parent is not None:
             if isinstance( parent, Uio ):
                 parent = parent.region()
-            elif isinstance( parent, MemRegion ):
+            elif not isinstance( parent, MemRegion ):
                 raise TypeError
 
         # build path to sysfs dir for obtaining metadata
