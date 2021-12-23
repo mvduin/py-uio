@@ -234,6 +234,7 @@ class EPwm( ctypes.Structure ):
         self.cmp_load = 1 << 0 | 1 << 2  # reload cmp when counter reaches max
         self.config |= 1 << 15
 
+        self.divider = divider
         self.ld_maximum = period - 1
 
         # set period immediately and reset counter
