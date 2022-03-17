@@ -5,6 +5,7 @@ from uio.ti.icss import Icss
 import ctypes
 from ctypes import c_uint32 as uint, c_uint16 as ushort
 from time import sleep
+from sys import exit
 
 pruss = Icss( "/dev/uio/pruss/module" )
 pruss.initialize()
@@ -81,4 +82,4 @@ while not core.halted:
         recv_message()
     sleep( 0.01 )
 
-sys.exit( "buffer overflow!  id=%d" % nextid )
+exit( "buffer overflow!  id=%d" % nextid )
