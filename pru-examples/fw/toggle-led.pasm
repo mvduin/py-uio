@@ -20,7 +20,7 @@
 start:
 	mov	gpio1, GPIO1
 
-	// check if led is current on or off
+	// check if led is currently on or off
 	lbbo	tmp, gpio1, GPIO_OUT, 4
 	bbs	led_on, tmp, LED
 
