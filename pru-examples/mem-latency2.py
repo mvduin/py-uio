@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 
 # This is not really an example but rather some code to do
 # memory latency/throughput tests.
@@ -19,6 +19,12 @@ iterations0 = 1000
 iterations1 = 5000
 tries = 5
 cpw = False
+
+action = "load"
+address = 0x2e000
+iterations0 = 0
+iterations1 = 100
+tries = 10
 
 # setup trigger to start core
 EVENT = 16

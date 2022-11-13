@@ -8,6 +8,7 @@ from .cfg import Cfg
 from .core import Core
 from .intc import Intc
 from .uart import Uart
+from .iep import Iep, Edio
 from ..ecap import ECap
 from ctypes import c_uint
 
@@ -41,8 +42,16 @@ class Icss( Uio ):
 
         # subsystem peripherals
         self.uart  = self.map( Uart, 0x28000 )
-        #self.iep  = self.map( Iep,  0x2e000 )
+        self.iep   = None
         self.ecap  = self.map( ECap, 0x30000 )
+
+        if self.cfg.ident == 0x47000000:
+            self.iep = self.map( Iep, 0x2e000 )
+
+        if self.iep is not None:
+            self.edio = self.iep.edio
+        else:
+            self.edio = self.map( Edio, 0x2e300 )
 
         # instruction memories
         self.iram0 = self.subregion( 0x34000, 0x04000, name='iram0' )
