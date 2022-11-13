@@ -200,6 +200,18 @@ class Uio:
     def map( self, length_or_struct=None, offset=0 ):
         return self.region().map( length_or_struct, offset )
 
+    # shortcut to read from default region (index 0)
+    def read( self, length_or_struct=None, offset=0 ):
+        return self.region().read( length_or_struct, offset )
+
+    # shortcut to write to default region (index 0)
+    def write( self, data=None, offset=0 ):
+        return self.region().write( data, offset )
+
+    # shortcut to fill bytes in default region (index 0)
+    def fill( self, length=None, offset=0, value=0 ):
+        return self.region().fill( length, offset, value )
+
 
     # TODO determine if the device has any irq
 
