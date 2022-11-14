@@ -2,6 +2,7 @@
 
 from uio.ti.icss import Icss
 from ctypes import c_uint32
+import struct
 
 pruss = Icss( "/dev/uio/pruss/module" )
 pruss.initialize()

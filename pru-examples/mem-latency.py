@@ -43,11 +43,11 @@ def prepare( core, pc, addr, length, iterations ):
     core.r1 = addr
     core.run( pc=pc, profiling=True )
 
-action = "load"
+action = "store"
 iterations0 = 0
-iterations1 = 10
-address = 0x47c00800
-tries = 20
+iterations1 = 1000
+address = 0x4a310000
+tries = 5
 cpw = False
 
 msg = f"{action} at 0x{address:x}"
@@ -55,7 +55,7 @@ if iterations0:
     msg += f", skip {iterations0}x"
 msg += f", measure {iterations1}x"
 print( msg )
-for nwords in range(1,2):
+for nwords in range(1,25):
     msg = f"{nwords:3d} words: "
     for i in range( tries ):
         iterations = iterations0 + iterations1
