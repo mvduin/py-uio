@@ -3,7 +3,7 @@
 import ctypes
 
 def define( mask_t, stride=None ):
-    if stride == None:
+    if stride is None:
         padding = 0
     else:
         padding = stride - ctypes.sizeof( mask_t )
@@ -48,7 +48,7 @@ def define( mask_t, stride=None ):
 
         def pull( self, mask=None ):
             irqs = self._clear
-            if mask != None:
+            if mask is not None:
                 irqs &= mask
             self._clear = irqs
             return irqs

@@ -281,7 +281,7 @@ class Core( ctypes.Structure ):
             if self.halted:
                 self.cache_initialize()
                 return True
-        if check == None:
+        if check is None:
             check = wakeup
         if check:
             raise RuntimeError("PRU core failed to halt")
@@ -291,9 +291,9 @@ class Core( ctypes.Structure ):
         control = self.control
         if control & ( RUN | BUSY ):
             raise RuntimeError("PRU core is not halted")
-        if profiling == None:
+        if profiling is None:
             profiling = bool( control & PROFILE )
-        if pc != None:
+        if pc is not None:
             self.reset_pc = pc
         control = 0
         if profiling:
@@ -304,14 +304,14 @@ class Core( ctypes.Structure ):
         control = self.control
         if control & ( RUN | BUSY ):
             raise RuntimeError("PRU core is not halted")
-        if profiling == None:
+        if profiling is None:
             profiling = bool( control & PROFILE )
-        if reset == None:
-            reset = pc != None
-        if pc != None and pc != self.pc and not reset:
+        if reset is None:
+            reset = pc is not None
+        if pc is not None and pc != self.pc and not reset:
             raise RuntimeError("Cannot change pc without resetting core")
 
-        if pc != None:
+        if pc is not None:
             self.reset_pc = pc
 
         if reset:

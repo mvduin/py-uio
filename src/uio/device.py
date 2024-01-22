@@ -15,7 +15,7 @@ PAGE_MASK = -PAGE_SIZE
 # a physical memory region associated with an uio device
 class MemRegion:
     def __init__( rgn, parent, address, size, name=None, uio=None, index=None ):
-        if parent == None and uio == None:
+        if parent is None and uio is None:
             raise ValueError( "parent region or uio device required" )
         if size < 0:
             raise ValueError( "invalid size" )
@@ -147,19 +147,19 @@ class MemRegion:
 
     # map data from region at given offset
     def map( rgn, length=None, offset=0 ):
-        if rgn._mmap == None:
+        if rgn._mmap is None:
             raise RuntimeError( "memory region cannot be mapped" )
 
         if isinstance( length, type ):
             # map ctypes instance (does all necessary error checking)
             return length.from_buffer( rgn._mmap, offset )
 
-        if isinstance( length, int ) or length == None:
+        if isinstance( length, int ) or length is None:
             # map byte-range
             if offset < 0:
                 raise ValueError( "offset cannot be negative" )
             end = rgn.mappable
-            if length != None:
+            if length is not None:
                 end = min( offset + length, end )
             if offset == 0 and end == rgn.mappable:
                 return rgn._mmap
