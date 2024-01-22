@@ -124,6 +124,27 @@ class MemRegion:
         # read bytes
         return bytes( rgn.map( length, offset ) )
 
+    # read C-string from region at given offset (use encoding=None if you want a bytes object)
+    def read_string( rgn, offset=0, *, encoding='utf-8', errors='strict' ):
+        if offset not in range( rgn.mappable ):
+            raise ValueError( "invalid offset" )
+        # FIXME figure out better way to read C-string from memoryview
+        m = rgn.map()
+        end = len( m )
+        s = bytes( m[ offset : ( offset & -16 ) + 256 ] )
+        offset += len(s)
+        i = s.find( 0 )
+        while i < 0:
+            if offset >= end:
+                raise ValueError( "no string terminator found before end" )
+            s += bytes( m[ offset : offset + 256 ] )
+            offset += 256
+            i = s.find( 0, -256 )
+        s = s[ : i ]
+        if encoding is not None:
+            s = s.decode( encoding=encoding, errors=errors )
+        return s
+
     # map data from region at given offset
     def map( rgn, length=None, offset=0 ):
         if rgn._mmap == None:
@@ -203,6 +224,10 @@ class Uio:
     # shortcut to read from default region (index 0)
     def read( self, length_or_struct=None, offset=0 ):
         return self.region().read( length_or_struct, offset )
+
+    # shortcut to read C-string from default region (index 0)
+    def read_string( self, offset=0, *, encoding='utf-8', errors='strict' ):
+        return self.region().read_string( offset, encoding=encoding, errors=errors  )
 
     # shortcut to write to default region (index 0)
     def write( self, data=None, offset=0 ):

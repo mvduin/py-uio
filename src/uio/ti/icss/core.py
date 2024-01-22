@@ -400,6 +400,11 @@ class Core( ctypes.Structure ):
         ( mem, offset ) = self._address_map( address )
         return mem.read( length_or_type, offset )
 
+    # read C-string from PRU memory
+    def read_string( self, address, *, encoding='utf-8', errors='strict' ):
+        ( mem, offset ) = self._address_map( address )
+        return mem.read_string( offset, encoding=encoding, errors=errors )
+
     # map data in PRU memory
     def map( self, length_or_type, address ):
         ( mem, offset ) = self._address_map( address )
